@@ -4,7 +4,7 @@
 
     <groupId>org.restnext</groupId>
     <artifactId>restnext</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -48,7 +48,7 @@
         <connection>scm:git:git@github.com:RestNEXT/restnext.git</connection>
         <developerConnection>scm:git:git@github.com:RestNEXT/restnext.git</developerConnection>
         <url>https://github.com/RestNEXT/restnext/tree/master</url>
-        <tag>restnext-0.1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
