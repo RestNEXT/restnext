@@ -47,8 +47,8 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git://github.com/RestNEXT/restnext.git</connection>
-        <developerConnection>scm:git:ssh://github.com/RestNEXT/restnext.git</developerConnection>
+        <connection>scm:git:git@github.com:RestNEXT/restnext.git</connection>
+        <developerConnection>scm:git:git@github.com:RestNEXT/restnext.git</developerConnection>
         <url>https://github.com/RestNEXT/restnext/tree/master</url>
         <tag>HEAD</tag>
     </scm>
