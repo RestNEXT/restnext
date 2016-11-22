@@ -2,6 +2,8 @@
 
 [![N|Solid](https://avatars3.githubusercontent.com/u/473791?v=3&s=50)](http://netty.io/) Powered By Netty
 
+[![Build Status](https://travis-ci.org/RestNEXT/restnext.svg?branch=master)](https://travis-ci.org/RestNEXT/restnext)
+
 RestNext is a framework (extremely simple to use) built on top of Netty framework (4.1.x) with automatic security and route scanning approach for micro services. The RestNext biggest difference is the ability to register/unregister routes and security for routes without having to restart the application server. Where are cross cutting system functionalities.
 
 ### Motivation
@@ -11,12 +13,15 @@ After several searches on the WWW, I have not found a framework easy to use, hig
 ### Usage
 
   - Simple usage:
+  
     ```java
     public static void main(String[] args) {
         ServerInitializer.route("/", req -> Response.ok("it works".getBytes()).build()).start();
     }
     ```
+    
   - More complete example:
+  
     ```java
     public static void main(String[] args) {
 
@@ -69,9 +74,11 @@ When you enable route/security auto scanning, the default directory path or the 
     /META-INF/route/*.json
     /META-INF/security/*.json
 ```
+
 Each folder (route / security) can contain as many JSON files you want, and the name of the JSON file can be any name you want.
 
 Route.json example:
+
 ```json
 [
   {
@@ -146,8 +153,6 @@ Download and extract the [latest pre-built release](https://github.com/RestNEXT/
 
  - Write Tests
  - Add Javadoc and Code Comments
- - Publish realease at Maven Central
- - Integrate with Travis CI
 
 License
 ----

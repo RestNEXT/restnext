@@ -11,7 +11,7 @@
 
     <name>${project.artifactId}</name>
     <description>RestNext is a framework built on top of Netty framework with automatic security and route scanning approach for micro services.</description>
-    <url>https://github.com/RestNEXT/restnext</url>
+    <url>https://github.com/RestNEXT</url>
 
     <inceptionYear>2016</inceptionYear>
 
@@ -47,11 +47,22 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git@github.com:RestNEXT/restnext.git</connection>
-        <developerConnection>scm:git:git@github.com:RestNEXT/restnext.git</developerConnection>
-        <url>git@github.com:RestNEXT/restnext.git</url>
+        <connection>scm:git:git://github.com/RestNEXT/restnext.git</connection>
+        <developerConnection>scm:git:ssh://github.com/RestNEXT/restnext.git</developerConnection>
+        <url>https://github.com/RestNEXT/restnext/tree/master</url>
         <tag>HEAD</tag>
     </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <modules>
         <module>restnext-bom</module>
@@ -59,7 +70,6 @@
         <module>restnext-util</module>
         <module>restnext-server</module>
         <module>restnext-route</module>
-        <module>restnext-assembly</module>
         <module>restnext-security</module>
     </modules>
 
@@ -108,6 +118,20 @@
                     </executions>
                 </plugin>
                 <plugin>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                    <inherited>true</inherited>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.5.3</version>
                     <inherited>true</inherited>
@@ -136,11 +160,6 @@
                         </rules>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.0.0</version>
-                    <inherited>true</inherited>
-                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -154,79 +173,16 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>
             <plugin>
+                <artifactId>maven-gpg-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <artifactId>maven-release-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>realease-nexus-artifacts</id>
-            <activation>
-                <property>
-                    <name>performNexusRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>ossrh</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                </snapshotRepository>
-                <repository>
-                    <id>ossrh</id>
-                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-                </repository>
-            </distributionManagement>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
