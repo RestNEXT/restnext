@@ -3,6 +3,9 @@
 [![N|Solid](https://avatars3.githubusercontent.com/u/473791?v=3&s=50)](http://netty.io/) Powered By Netty
 
 [![Build Status](https://travis-ci.org/RestNEXT/restnext.svg?branch=master)](https://travis-ci.org/RestNEXT/restnext)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.restnext/restnext/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Corg.restnext)
+[![Javadocs](http://www.javadoc.io/badge/org.restnext/restnext.svg)](http://www.javadoc.io/doc/org.restnext/restnext-server)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 RestNext is a framework (extremely simple to use) built on top of Netty framework (4.1.x) with automatic security and route scanning approach for micro services. The RestNext biggest difference is the ability to register/unregister routes and security for routes without having to restart the application server. Where are cross cutting system functionalities.
 
@@ -149,14 +152,19 @@ RestNEXT requires JDK 8 to run.
 
 Download and extract the [latest pre-built release](https://github.com/RestNEXT/restnext/releases).
 
+Maven Artifact:
+
+```xml
+<dependency>
+    <groupId>org.restnext</groupId>
+    <artifactId>restnext-server</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
 ### Todos
 
  - Write Tests
  - Add Javadoc and Code Comments
-
-License
-----
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 **Fell free to contribute!**
