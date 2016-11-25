@@ -48,8 +48,7 @@ public final class FileUtils {
         return Optional.ofNullable(path).map(Path::toString)
                 .filter(strPath -> strPath.indexOf('.') > 0) // to avoid hidden files.
                 .map(strPath -> Paths.get(strPath.substring(0, strPath.lastIndexOf('.'))))
-//                .orElse(path);
-                .orElseThrow(() -> new NullPointerException("Path must not be null"));
+                .orElse(path);
     }
 
 }

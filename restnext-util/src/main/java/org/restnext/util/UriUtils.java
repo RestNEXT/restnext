@@ -11,7 +11,7 @@ public final class UriUtils {
      * Regex to validate uris with or without parameters.
      * E.g: /test/1/{id}/sub/{2}/{name}
      */
-    private static final Pattern PATH_PARAM_URI = Pattern.compile("^([/])(([/\\w])+(/\\{[\\w]+\\})*)*([?])?$");
+    public static final Pattern PATH_PARAM_URI = Pattern.compile("^([/])(([/\\w])+(/\\{[\\w]+\\})*)*([?])?$");
 
     private UriUtils() {
         throw new AssertionError();
