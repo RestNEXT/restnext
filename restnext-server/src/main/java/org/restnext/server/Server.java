@@ -69,7 +69,7 @@ public final class Server {
     }
 
     public static void main(String[] args) {
-        ServerInitializer.route("/", r -> Response.ok("it works".getBytes()).build()).start();
+        ServerInitializer.route("/", r -> Response.ok("it works").build()).start();
     }
 
     public void start() {

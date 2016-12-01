@@ -145,7 +145,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         FullHttpResponse resp = response.getFullHttpResponse();
 
         // Adds some headers.
-        resp.headers().set(SERVER, "RestNext");
+        resp.headers().set(SERVER, "RestNEXT");
         resp.headers().set("x-powered-by", "Netty");
 
         // Check and set keep alive header to decide

@@ -21,6 +21,8 @@ import org.restnext.core.http.EntityTag;
 import org.restnext.core.http.MediaType;
 
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public interface Response extends Message, Headers {
@@ -269,8 +271,24 @@ public interface Response extends Message, Headers {
         return ok().type(type);
     }
 
-    static Response.Builder ok(String type) {
-        return ok().type(type);
+    static Response.Builder ok(String content) {
+        return ok(content, StandardCharsets.UTF_8);
+    }
+
+    static Response.Builder ok(String content, Charset charset) {
+        return ok(content.getBytes(charset));
+    }
+
+    static Response.Builder ok(String content, String mediaType) {
+        return ok(content, StandardCharsets.UTF_8, MediaType.parse(mediaType));
+    }
+
+    static Response.Builder ok(String content, MediaType mediaType) {
+        return ok(content, StandardCharsets.UTF_8, mediaType);
+    }
+
+    static Response.Builder ok(String content, Charset charset, MediaType mediaType) {
+        return ok(content.getBytes(charset), mediaType);
     }
 
     static Response.Builder serverError() {

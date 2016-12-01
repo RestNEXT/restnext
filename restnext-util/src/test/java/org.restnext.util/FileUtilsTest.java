@@ -4,7 +4,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -18,9 +17,7 @@ import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by thiago on 25/11/16.
@@ -78,11 +75,9 @@ public class FileUtilsTest {
     @Test(expected = UnsupportedOperationException.class)
     public void listChildrenUnmodifiableTest() throws IOException {
         Path file = folder.newFile("file.txt").toPath();
-        Path file2 = folder.newFile("file2.txt").toPath();
-        Path subfolder = folder.newFolder("subfolder").toPath();
-        Path subfolder2 = folder.newFolder("subfolder2").toPath();
-
+        assertTrue(Files.exists(file));
         Set<Path> children = FileUtils.listChildren(folder.getRoot().toPath(), null);
+        assertEquals(1, children.size());
         children.remove(file);
     }
 }
