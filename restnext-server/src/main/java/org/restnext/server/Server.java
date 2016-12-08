@@ -15,6 +15,7 @@
  */
 package org.restnext.server;
 
+import org.restnext.core.http.MediaType;
 import org.restnext.core.http.codec.Response;
 import org.restnext.util.AnsiUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -69,7 +70,7 @@ public final class Server {
     }
 
     public static void main(String[] args) {
-        ServerInitializer.route("/", r -> Response.ok("it works").build()).start();
+        ServerInitializer.route("/", r -> Response.ok("it works", MediaType.TEXT).build()).start();
     }
 
     public void start() {

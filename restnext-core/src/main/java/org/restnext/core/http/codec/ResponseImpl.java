@@ -162,6 +162,10 @@ final class ResponseImpl implements Response {
             // Set my mandatory Date header, if necessary.
             if (this.headers.get(DATE) == null) date(new Date());
 
+            // Adds some custom headers.
+            this.headers.set(SERVER, "RestNEXT");
+            this.headers.set("x-powered-by", "Netty");
+
             // Set outbound headers in the response object.
             for (String name : this.headers.names()) {
                 List<String> values = this.headers.getAll(name);
@@ -268,12 +272,12 @@ final class ResponseImpl implements Response {
         }
 
         @Override
-        public Response.Builder setHeader(String name, Object value) {
+        public Response.Builder setHeader(CharSequence name, Object value) {
             return header(name, value, false);
         }
 
         @Override
-        public Response.Builder addHeader(String name, Object value) {
+        public Response.Builder addHeader(CharSequence name, Object value) {
             return header(name, value, true);
         }
 
@@ -285,7 +289,7 @@ final class ResponseImpl implements Response {
             return header(name.toString(), value, false);
         }
 
-        public Response.Builder header(String name, Object value, boolean combined) {
+        public Response.Builder header(CharSequence name, Object value, boolean combined) {
             if (value != null) {
                 if (combined) {
                     this.headers.add(name, value);

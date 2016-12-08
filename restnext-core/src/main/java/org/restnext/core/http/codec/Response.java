@@ -88,7 +88,8 @@ public interface Response extends Message, Headers {
         BAD_GATEWAY(HttpResponseStatus.BAD_GATEWAY),
         SERVICE_UNAVAILABLE(HttpResponseStatus.SERVICE_UNAVAILABLE),
         GATEWAY_TIMEOUT(HttpResponseStatus.GATEWAY_TIMEOUT),
-        HTTP_VERSION_NOT_SUPPORTED(HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED);
+        HTTP_VERSION_NOT_SUPPORTED(HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED),
+        CONTINUE(HttpResponseStatus.CONTINUE);
 
         private static class Holder {
             static Map<HttpResponseStatus, Status> MAP = new HashMap<>();
@@ -180,9 +181,9 @@ public interface Response extends Message, Headers {
 
         Response.Builder encoding(String encoding);
 
-        Response.Builder setHeader(String name, Object value);
+        Response.Builder setHeader(CharSequence name, Object value);
 
-        Response.Builder addHeader(String name, Object value);
+        Response.Builder addHeader(CharSequence name, Object value);
 
         Response.Builder type(MediaType type);
 

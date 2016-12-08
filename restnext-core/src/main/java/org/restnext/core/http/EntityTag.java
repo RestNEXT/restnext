@@ -39,7 +39,6 @@
  */
 package org.restnext.core.http;
 
-import java.text.ParseException;
 import java.util.Objects;
 
 /**

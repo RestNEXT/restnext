@@ -98,7 +98,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     }
 
     @SafeVarargs
-    public final static Builder routes(Route.Mapping... routesMapping) {
+    public static Builder routes(Route.Mapping... routesMapping) {
         return builder().routes(routesMapping);
     }
 

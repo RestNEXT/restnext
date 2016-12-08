@@ -17,8 +17,6 @@ package org.restnext.core.http;
 
 import org.junit.Test;
 
-import java.text.ParseException;
-
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 

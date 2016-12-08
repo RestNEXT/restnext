@@ -41,4 +41,11 @@ public final class JsonUtils {
         }
     }
 
+    public static byte[] toJsonAsBytes(Object object) {
+        try {
+            return mapper.writeValueAsBytes(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

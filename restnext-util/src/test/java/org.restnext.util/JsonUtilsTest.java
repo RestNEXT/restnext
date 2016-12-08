@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -67,6 +68,11 @@ public class JsonUtilsTest {
     @Test
     public void toJsonTest() {
         assertEquals(json, JsonUtils.toJson(metadata));
+    }
+
+    @Test
+    public void toJsonAsBytesTest() {
+        assertTrue(Arrays.equals(json.getBytes(), JsonUtils.toJsonAsBytes(metadata)));
     }
 
     private static final class Metadata {

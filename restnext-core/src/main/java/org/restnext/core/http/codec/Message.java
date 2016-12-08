@@ -57,8 +57,12 @@ public interface Message {
         }
 
         public static Version of(HttpVersion version) {
+            return of(version, null);
+        }
+
+        public static Version of(HttpVersion version, Version def) {
             if (version == null) return null;
-            return Holder.MAP.getOrDefault(version, null);
+            return Holder.MAP.getOrDefault(version, def);
         }
     }
 }

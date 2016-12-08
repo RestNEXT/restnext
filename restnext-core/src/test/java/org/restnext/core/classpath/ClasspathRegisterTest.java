@@ -1,13 +1,11 @@
 package org.restnext.core.classpath;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
@@ -17,16 +15,21 @@ import static org.junit.Assert.assertTrue;
  */
 public class ClasspathRegisterTest {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir")));
+//    @Rule
+//    public TemporaryFolder folder = new TemporaryFolder(new File(System.getProperty("user.dir")));
 
 //    @Test
-    public void addPathTest() throws IOException {
+    public void addPathTest() {
 //        final Path path = folder.newFile("teste.jar").toPath();
         final Path path = Paths.get(".");
-        assertTrue(Arrays.stream(System.getProperty("java.class.path").split(":")).map(filepath -> Paths.get(filepath)).noneMatch(file -> file.equals(path)));
+        assertTrue(Arrays.stream(getClassPath().split(":")).map(filepath -> Paths.get(filepath)).noneMatch(file -> file.equals(path)));
         ClasspathRegister.addPath(path);
-        assertTrue(Arrays.stream(System.getProperty("java.class.path").split(":")).map(filepath -> Paths.get(filepath)).anyMatch(file -> file.equals(path)));
+        assertTrue(Arrays.stream(getClassPath().split(":")).map(filepath -> Paths.get(filepath)).anyMatch(file -> file.equals(path)));
+    }
+
+    public static String getClassPath() {
+        final String key = "java.class.path";
+        return System.getSecurityManager() == null ? System.getProperty(key) : AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(key));
     }
 
 //    /**
