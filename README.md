@@ -19,7 +19,10 @@ After several searches on the WWW, I have not found a framework easy to use, hig
   
     ```java
     public static void main(String[] args) {
-        ServerInitializer.route("/", req -> Response.ok("it works".getBytes()).build()).start();
+        ServerInitializer
+            .route("/", req -> Response.ok("it works").build())
+            .route("/ping", req -> Response.ok("pong").build())
+        .start();
     }
     ```
     
