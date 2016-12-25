@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.restnext</groupId>
         <artifactId>restnext</artifactId>
-        <version>0.1.1</version>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>restnext-bom</artifactId>
@@ -108,7 +108,7 @@
     </dependencyManagement>
 
     <properties>
-        <restnext.version>0.1.1</restnext.version>
+        <restnext.version>0.1.2-SNAPSHOT</restnext.version>
         <netty.version>4.1.6.Final</netty.version>
         <javassist.version>3.21.0-GA</javassist.version>
         <jansi.version>1.14</jansi.version>
