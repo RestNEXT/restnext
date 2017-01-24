@@ -15,6 +15,7 @@
  */
 package org.restnext.core.http.codec;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
@@ -28,6 +29,8 @@ import org.restnext.core.http.MultivaluedHashMap;
 import org.restnext.core.http.MultivaluedMap;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
 
@@ -42,19 +45,27 @@ final class RequestImpl implements Request {
     private final FullHttpRequest request;
     private final Version version;
     private final Method method;
+    private final String baseUri;
     private final String uri;
     private byte[] content;
     private final boolean keepAlive;
     private final MultivaluedMap<String, String> headers;
     private final MultivaluedMap<String, String> parameters;
 
-    RequestImpl(final FullHttpRequest request) {
+    RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
         Objects.requireNonNull(request, "Request must not be null");
+        Objects.requireNonNull(context, "Context must not be null");
         this.request = request;
 
         this.version = Version.of(request.protocolVersion());
         this.method = Method.of(request.method());
+
+        URI baseUri = getBaseUri(context, request);
+//        URI fullRequestUri = baseUri.resolve(request.uri());
+
         this.uri = normalize(request.uri());
+        this.baseUri = baseUri.toString();
+
         this.keepAlive = HttpUtil.isKeepAlive(request);
 
         // copy the inbound netty request headers.
@@ -110,6 +121,11 @@ final class RequestImpl implements Request {
     @Override
     public FullHttpRequest getFullHttpRequest() {
         return request;
+    }
+
+    @Override
+    public String getBaseURI() {
+        return baseUri;
     }
 
     @Override
@@ -257,6 +273,23 @@ final class RequestImpl implements Request {
         // Since the resource does not exist the method must not be
         // perform and 412 Precondition Failed is returned
         return Response.status(Response.Status.PRECONDITION_FAILED);
+    }
+
+    private URI getBaseUri(ChannelHandlerContext ctx, FullHttpRequest req) {
+//        if (baseUri != null) {
+//            // Ensure that the base path ends with a '/'
+//            return baseUri.trim().endsWith("/") ? URI.create(baseUri) : URI.create(baseUri + "/");
+//        }
+//        final String reqUri = req.uri();
+        final String protocol = req.protocolVersion().protocolName().toLowerCase();
+//        final String basePath = reqUri.split("/")[reqUri.indexOf('/') + 1];
+        String host = req.headers().get(HttpHeaderNames.HOST);
+        if (host == null) {
+            InetSocketAddress address = (InetSocketAddress) ctx.channel().localAddress();
+            host = address.getHostName() + ":" + address.getPort();
+        }
+//        return URI.create(String.format("%s://%s/%s/", protocol, host, basePath));
+        return URI.create(String.format("%s://%s", protocol, host));
     }
 
     private Response.Builder evaluateIfMatch(EntityTag eTag) {

@@ -53,7 +53,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         }
 
         // Decode fullHttpRequest to Request object.
-        final Request request = Request.fromRequest(req);
+        final Request request = Request.fromRequest(ctx, req);
         final String uri = request.getURI();
         final MediaType media = request.getMediaType();
         final boolean keepAlive = request.isKeepAlive();

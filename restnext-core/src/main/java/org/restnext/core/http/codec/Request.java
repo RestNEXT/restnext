@@ -15,6 +15,7 @@
  */
 package org.restnext.core.http.codec;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import org.restnext.core.http.EntityTag;
@@ -28,6 +29,8 @@ import java.util.Map;
 public interface Request extends Message, Headers {
 
     FullHttpRequest getFullHttpRequest();
+
+    String getBaseURI();
 
     String getURI();
 
@@ -59,8 +62,8 @@ public interface Request extends Message, Headers {
     //     STATIC METHODS
     //============================
 
-    static Request fromRequest(FullHttpRequest request) {
-        return new RequestImpl(request);
+    static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+        return new RequestImpl(ctx, request);
     }
 
     //============================
