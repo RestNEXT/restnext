@@ -16,7 +16,11 @@
 package org.restnext.core.http.codec;
 
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.DateFormatter;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.AsciiString;
 import org.restnext.core.http.EntityTag;
 import org.restnext.core.http.MediaType;
@@ -24,7 +28,6 @@ import org.restnext.core.http.MultivaluedHashMap;
 import org.restnext.core.http.MultivaluedMap;
 
 import java.net.URI;
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -117,12 +120,8 @@ final class ResponseImpl implements Response {
 
     @Override
     public Date getLastModified() {
-        try {
-            String header = getHeader(LAST_MODIFIED);
-            return header != null ? HttpHeaderDateFormat.get().parse(header) : null;
-        } catch (ParseException ignore) {
-            return null;
-        }
+        String header = getHeader(LAST_MODIFIED);
+        return header != null ? DateFormatter.parseHttpDate(header) : null;
     }
 
     @Override
@@ -228,17 +227,17 @@ final class ResponseImpl implements Response {
 
         @Override
         public Response.Builder expires(Date expires) {
-            return setHeader(EXPIRES, expires == null ? null : HttpHeaderDateFormat.get().format(expires));
+            return setHeader(EXPIRES, expires == null ? null : DateFormatter.format(expires));
         }
 
         @Override
         public Response.Builder date(Date date) {
-            return setHeader(DATE, date == null ? null : HttpHeaderDateFormat.get().format(date));
+            return setHeader(DATE, date == null ? null : DateFormatter.format(date));
         }
 
         @Override
         public Response.Builder lastModified(Date lastModified) {
-            return setHeader(LAST_MODIFIED, lastModified == null ? null : HttpHeaderDateFormat.get().format(lastModified));
+            return setHeader(LAST_MODIFIED, lastModified == null ? null : DateFormatter.format(lastModified));
         }
 
         @Override

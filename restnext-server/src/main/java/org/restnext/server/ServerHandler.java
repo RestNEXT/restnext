@@ -94,12 +94,11 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                 .orElseThrow(() -> new ServerException(String.format(
                         "Unsupported %s media type for the request uri %s", media, uri), UNSUPPORTED_MEDIA_TYPE));
 
-        // Get the response for the request.
-        Response response = Optional.ofNullable(routeMapping.writeResponse(request))
-                .orElse(Response.noContent().version(version).build());
+        // Write sync the response for the request.
+        write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
+                .orElse(Response.noContent().version(version).build()), keepAlive);
 
-        // Write the response for the request.
-        write(ctx, response, keepAlive);
+        ////////////////////
 
 //        // Create a response task to get the response for the request.
 //        Callable<Response> responseTask = () -> Optional.ofNullable(routeMapping.writeResponse(request))
@@ -109,11 +108,12 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 //        // when the operation complete.
 //        eventExecutors.submit(responseTask).addListener(future -> {
 //            if (future.isSuccess()) {
-//                // Write the response for the request.
+//                // Write async the response for the request.
 //                write(ctx, (Response) future.get(), keepAlive);
-//            } else {
-//                writeError(ctx, INTERNAL_SERVER_ERROR, future.cause());
 //            }
+////            else {
+////                exceptionCaught(ctx, future.cause());
+////            }
 //        });
     }
 
@@ -134,7 +134,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             map.put("statusCode", status.getStatusCode());
             map.put("statusMessage", status.getReasonPhrase());
             map.put("statusFamily", status.getFamily());
-            map.put("errorMessage", cause.getMessage());
+            if (cause.getMessage() != null) map.put("errorMessage", cause.getMessage());
             if (cause.getCause() != null) map.put("detailErrorMessage", cause.getCause().getMessage());
 //            map.put("developerErrorMessage", ExceptionUtils.getStackTraceAsString(cause));
 

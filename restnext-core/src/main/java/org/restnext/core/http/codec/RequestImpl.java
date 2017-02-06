@@ -16,6 +16,7 @@
 package org.restnext.core.http.codec;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.DateFormatter;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
@@ -31,11 +32,10 @@ import org.restnext.core.http.MultivaluedMap;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.text.ParseException;
 import java.util.*;
 
-import static org.restnext.util.UriUtils.normalize;
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
+import static org.restnext.util.UriUtils.normalize;
 
 /**
  * Created by thiago on 24/08/16.
@@ -175,12 +175,8 @@ final class RequestImpl implements Request {
 
     @Override
     public Date getDate() {
-        try {
-            String header = getHeader(DATE);
-            return header != null ? HttpHeaderDateFormat.get().parse(header) : null;
-        } catch (ParseException ignore) {
-            return null;
-        }
+        String header = getHeader(DATE);
+        return header != null ? DateFormatter.parseHttpDate(header) : null;
     }
 
     @Override
@@ -346,13 +342,11 @@ final class RequestImpl implements Request {
         String ifUnmodifiedSinceHeader = getHeader(IF_UNMODIFIED_SINCE);
 
         if (ifUnmodifiedSinceHeader != null && !ifUnmodifiedSinceHeader.trim().isEmpty()) {
-            try {
-                long ifUnmodifiedSince = HttpHeaderDateFormat.get().parse(ifUnmodifiedSinceHeader).getTime();
-                if (roundDown(lastModifiedTime) > ifUnmodifiedSince) {
-                    // 412 Precondition Failed
-                    return Response.status(Response.Status.PRECONDITION_FAILED);
-                }
-            } catch (ParseException ignore) {}
+            long ifUnmodifiedSince = DateFormatter.parseHttpDate(ifUnmodifiedSinceHeader).getTime();
+            if (roundDown(lastModifiedTime) > ifUnmodifiedSince) {
+                // 412 Precondition Failed
+                return Response.status(Response.Status.PRECONDITION_FAILED);
+            }
         }
         return null;
     }
@@ -369,13 +363,11 @@ final class RequestImpl implements Request {
     }
 
     private Response.Builder evaluateIfModifiedSince(long lastModifiedTime, String ifModifiedSinceHeader) {
-        try {
-            final long ifModifiedSince = HttpHeaderDateFormat.get().parse(ifModifiedSinceHeader).getTime();
-            if (roundDown(lastModifiedTime) <= ifModifiedSince) {
-                // 304 Not modified
-                return Response.notModified();
-            }
-        } catch (final ParseException ignore) {}
+        final long ifModifiedSince = DateFormatter.parseHttpDate(ifModifiedSinceHeader).getTime();
+        if (roundDown(lastModifiedTime) <= ifModifiedSince) {
+            // 304 Not modified
+            return Response.notModified();
+        }
         return null;
     }
 
