@@ -19,6 +19,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.codec.Message;
 import org.restnext.core.http.codec.Request;
@@ -26,12 +28,14 @@ import org.restnext.core.http.codec.Response;
 import org.restnext.core.http.url.UrlMatch;
 import org.restnext.route.Route;
 import org.restnext.security.Security;
+import org.restnext.util.ExceptionUtils;
 import org.restnext.util.JsonUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import static org.restnext.core.http.codec.Response.Status.*;
 
@@ -40,7 +44,13 @@ import static org.restnext.core.http.codec.Response.Status.*;
  */
 class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-//    private final EventExecutorGroup eventExecutors = new DefaultEventExecutorGroup(30);
+    private final boolean enableAsyncResponse;
+    private final EventExecutorGroup eventExecutors;
+
+    ServerHandler(final boolean enableAsyncResponse) {
+        this.enableAsyncResponse = enableAsyncResponse;
+        this.eventExecutors = new DefaultEventExecutorGroup(30); // TODO parameterize the number of threads.
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
@@ -94,27 +104,27 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                 .orElseThrow(() -> new ServerException(String.format(
                         "Unsupported %s media type for the request uri %s", media, uri), UNSUPPORTED_MEDIA_TYPE));
 
-        // Write sync the response for the request.
-        write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
-                .orElse(Response.noContent().version(version).build()), keepAlive);
+        if (enableAsyncResponse) {
+            // Create a response task to get the response for the request.
+            Callable<Response> responseTask = () -> Optional.ofNullable(routeMapping.writeResponse(request))
+                    .orElse(Response.noContent().version(version).build());
 
-        ////////////////////
-
-//        // Create a response task to get the response for the request.
-//        Callable<Response> responseTask = () -> Optional.ofNullable(routeMapping.writeResponse(request))
-//                .orElse(Response.noContent().version(version).build());
-//
-//        // Submit the response task and lister to write a response
-//        // when the operation complete.
-//        eventExecutors.submit(responseTask).addListener(future -> {
-//            if (future.isSuccess()) {
-//                // Write async the response for the request.
-//                write(ctx, (Response) future.get(), keepAlive);
-//            }
-////            else {
-////                exceptionCaught(ctx, future.cause());
-////            }
-//        });
+            // Submit the response task and lister to write a response
+            // when the operation complete.
+            eventExecutors.submit(responseTask).addListener(future -> {
+                if (future.isSuccess()) {
+                    // Write async the response for the request.
+                    write(ctx, (Response) future.get(), keepAlive);
+                }
+//                else if (future.isCancellable()) {
+//                    //NOP
+//                }
+            });
+        } else {
+            // Write sync the response for the request.
+            write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
+                    .orElse(Response.noContent().version(version).build()), keepAlive);
+        }
     }
 
     @Override
@@ -136,7 +146,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             map.put("statusFamily", status.getFamily());
             if (cause.getMessage() != null) map.put("errorMessage", cause.getMessage());
             if (cause.getCause() != null) map.put("detailErrorMessage", cause.getCause().getMessage());
-//            map.put("developerErrorMessage", ExceptionUtils.getStackTraceAsString(cause));
+            map.put("stackTraceMessage", ExceptionUtils.getStackTraceAsString(cause));
 
             // Build the response error.
             Response response = Response.status(status).content(JsonUtils.toJsonAsBytes(map)).type(MediaType.JSON_UTF8).build();

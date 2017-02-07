@@ -27,6 +27,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.restnext.core.http.codec.Request;
 import org.restnext.core.http.codec.Response;
 import org.restnext.route.Route;
@@ -39,6 +40,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -50,12 +52,16 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     private final CorsConfig corsConfig;
     private final int maxContentLength;
     private final InetSocketAddress bindAddress;
+    private final Timeout timeout;
+    private final boolean enableAsyncResponse;
 
     private ServerInitializer(final Builder builder) {
         this.sslCtx = builder.sslContext;
         this.corsConfig = builder.corsConfig;
         this.maxContentLength = builder.maxContentLength;
         this.bindAddress = builder.bindAddress;
+        this.timeout = builder.timeout;
+        this.enableAsyncResponse = builder.enableAsyncResponse;
     }
 
     @Override
@@ -66,7 +72,8 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
         pipeline.addLast("streamer", new ChunkedWriteHandler());
         if (corsConfig != null) ch.pipeline().addLast("cors", new CorsHandler(corsConfig));
-        pipeline.addLast("handler", new ServerHandler());
+        if (timeout != null) pipeline.addLast("readTimeoutHandler", new ReadTimeoutHandler(timeout.time, timeout.unit));
+        pipeline.addLast("handler", new ServerHandler(enableAsyncResponse));
     }
 
     // getters methods
@@ -87,6 +94,14 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         return bindAddress;
     }
 
+    public Timeout getTimeout() {
+        return timeout;
+    }
+
+    public boolean isEnableAsyncResponse() {
+        return enableAsyncResponse;
+    }
+
     // static methods
 
     public static Builder builder() {
@@ -97,9 +112,23 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         return builder().route(uri, provider);
     }
 
-    @SafeVarargs
     public static Builder routes(Route.Mapping... routesMapping) {
         return builder().routes(routesMapping);
+    }
+
+    static final class Timeout {
+
+        private final long time;
+        private final TimeUnit unit;
+
+        Timeout() {
+            this(30, TimeUnit.SECONDS);
+        }
+
+        Timeout(long time, TimeUnit unit) {
+            this.time = time;
+            this.unit = unit;
+        }
     }
 
     // inner builder class
@@ -107,17 +136,29 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     public static final class Builder {
 
         private int maxContentLength = 64 * 1024;
+        private boolean enableAsyncResponse = true;
         private CorsConfig corsConfig = getCorsConfig();
         private SslContext sslContext /*= getSslContext()*/;
         private InetSocketAddress bindAddress = new InetSocketAddress(8080);
+        private Timeout timeout = new Timeout();
 
         public Builder bindAddress(InetSocketAddress bindAddress) {
             this.bindAddress = bindAddress;
             return this;
         }
 
+        public Builder timeout(int timeout, TimeUnit unit) {
+            this.timeout = new Timeout(timeout, unit);
+            return this;
+        }
+
         public Builder maxContentLength(int maxContentLength) {
             this.maxContentLength = maxContentLength;
+            return this;
+        }
+
+        public Builder enableAsyncResponse(boolean enableAsyncResponse) {
+            this.enableAsyncResponse = enableAsyncResponse;
             return this;
         }
 
@@ -135,7 +176,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
             return routes(Route.Mapping.uri(uri, provider).build());
         }
 
-        @SafeVarargs
         public final Builder routes(Route.Mapping... routeMapping) {
             Arrays.asList(routeMapping).forEach(Route.INSTANCE::register);
             return this;
@@ -145,7 +185,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
             return secures(Security.Mapping.uri(uri, provider).build());
         }
 
-        @SafeVarargs
         public final Builder secures(Security.Mapping... securityMapping) {
             Arrays.asList(securityMapping).forEach(Security.INSTANCE::register);
             return this;
