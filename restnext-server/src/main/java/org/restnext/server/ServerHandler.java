@@ -16,11 +16,11 @@
 package org.restnext.server;
 
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
+import io.netty.util.CharsetUtil;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.codec.Message;
 import org.restnext.core.http.codec.Request;
@@ -29,34 +29,25 @@ import org.restnext.core.http.url.UrlMatch;
 import org.restnext.route.Route;
 import org.restnext.security.Security;
 import org.restnext.util.ExceptionUtils;
-import org.restnext.util.JsonUtils;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Callable;
+import java.util.StringJoiner;
 
 import static org.restnext.core.http.codec.Response.Status.*;
 
 /**
  * Created by thiago on 04/08/16.
  */
+@ChannelHandler.Sharable
 class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
-
-    private final boolean enableAsyncResponse;
-    private final EventExecutorGroup eventExecutors;
-
-    ServerHandler(final boolean enableAsyncResponse) {
-        this.enableAsyncResponse = enableAsyncResponse;
-        this.eventExecutors = new DefaultEventExecutorGroup(30); // TODO parameterize the number of threads.
-    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
         if (!req.decoderResult().isSuccess()) {
             throw new ServerException(BAD_REQUEST);
         }
+
         // Handle 100 - Continue request.
         if (HttpUtil.is100ContinueExpected(req)) {
             ctx.write(new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.CONTINUE));
@@ -104,32 +95,9 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                 .orElseThrow(() -> new ServerException(String.format(
                         "Unsupported %s media type for the request uri %s", media, uri), UNSUPPORTED_MEDIA_TYPE));
 
-        if (enableAsyncResponse) {
-            // Create a response task to get the response for the request.
-            Callable<Response> responseTask = () -> Optional.ofNullable(routeMapping.writeResponse(request))
-                    .orElse(Response.noContent().version(version).build());
-
-            // Submit the response task and lister to write a response
-            // when the operation complete.
-            eventExecutors.submit(responseTask).addListener(future -> {
-                if (future.isSuccess()) {
-                    // Write async the response for the request.
-                    write(ctx, (Response) future.get(), keepAlive);
-                }
-//                else if (future.isCancellable()) {
-//                    //NOP
-//                }
-            });
-        } else {
-            // Write sync the response for the request.
-            write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
-                    .orElse(Response.noContent().version(version).build()), keepAlive);
-        }
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        ctx.flush();
+        // Write the response for the request.
+        write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
+                .orElse(Response.noContent().version(version).build()), keepAlive);
     }
 
     @Override
@@ -140,16 +108,19 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                     ((ServerException) cause).getResponseStatus() : INTERNAL_SERVER_ERROR;
 
             // Create the response error body.
-            Map<String, Object> map = new HashMap<>();
-            map.put("statusCode", status.getStatusCode());
-            map.put("statusMessage", status.getReasonPhrase());
-            map.put("statusFamily", status.getFamily());
-            if (cause.getMessage() != null) map.put("errorMessage", cause.getMessage());
-            if (cause.getCause() != null) map.put("detailErrorMessage", cause.getCause().getMessage());
-            map.put("stackTraceMessage", ExceptionUtils.getStackTraceAsString(cause));
+            StringJoiner content = new StringJoiner("\r\n")
+                    .add("statusCode: " + status.getStatusCode())
+                    .add("statusMessage: " + status.getReasonPhrase())
+                    .add("statusFamily: " + status.getFamily());
+            if (cause.getMessage() != null) content.add("errorMessage: " + cause.getMessage());
+            if (cause.getCause() != null) content.add("detailErrorMessage: " + cause.getCause().getMessage());
+            content.add("stackTraceMessage: " + ExceptionUtils.getStackTraceAsString(cause));
 
             // Build the response error.
-            Response response = Response.status(status).content(JsonUtils.toJsonAsBytes(map)).type(MediaType.JSON_UTF8).build();
+            Response response = Response.status(status)
+                    .content(content.toString().getBytes(CharsetUtil.UTF_8))
+                    .type(MediaType.TEXT_UTF8)
+                    .build();
 
             // Write the response error.
             write(ctx, response, false);
@@ -158,8 +129,6 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     }
 
     private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
-        Objects.requireNonNull(response);
-
         // Get the response as FullHttpResponse object.
         FullHttpResponse resp = response.getFullHttpResponse();
 
@@ -176,5 +145,4 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
         }
     }
-
 }

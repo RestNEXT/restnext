@@ -4,7 +4,7 @@
 
     <groupId>org.restnext</groupId>
     <artifactId>restnext</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
@@ -138,6 +138,11 @@
                             </requireJavaVersion>
                         </rules>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jvnet.jaxb2.maven2</groupId>
+                    <artifactId>maven-jaxb2-plugin</artifactId>
+                    <version>0.13.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

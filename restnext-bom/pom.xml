@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.restnext</groupId>
         <artifactId>restnext</artifactId>
-        <version>0.1.2-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>restnext-bom</artifactId>
@@ -53,14 +53,10 @@
                 <version>${javassist.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.fusesource.jansi</groupId>
                 <artifactId>jansi</artifactId>
                 <version>${jansi.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>pl.joegreen</groupId>
@@ -72,14 +68,13 @@
                     and it's not available in pure JRE. When client applications were running on JRE then no Java
                     compiler was available at runtime and the LambdaFromString library failed to compile lambda code.
                     Eclipse ECJ makes it possible to use LambdaFromString even in cases when only JRE is available at runtime.
-
+                -->
                 <exclusions>
                     <exclusion>
                         <groupId>org.eclipse.jdt.core.compiler</groupId>
                         <artifactId>ecj</artifactId>
                     </exclusion>
                 </exclusions>
-                -->
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -90,7 +85,7 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
-                <scope>runtime</scope>
+                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
@@ -108,14 +103,13 @@
     </dependencyManagement>
 
     <properties>
-        <restnext.version>0.1.2-SNAPSHOT</restnext.version>
-        <netty.version>4.1.7.Final</netty.version>
+        <restnext.version>0.2.0-SNAPSHOT</restnext.version>
+        <netty.version>4.1.8.Final</netty.version>
         <javassist.version>3.21.0-GA</javassist.version>
         <jansi.version>1.14</jansi.version>
-        <jackson.version>2.8.5</jackson.version>
         <lambda-string.version>1.4</lambda-string.version>
         <slf4j.version>1.7.22</slf4j.version>
-        <logback.version>1.1.8</logback.version>
+        <logback.version>1.1.10</logback.version>
         <junit.version>4.12</junit.version>
     </properties>
 

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.restnext.org/securities"
+           xmlns="http://www.restnext.org/securities"
+           elementFormDefault="qualified">
+
+    <xs:element name="securities">
+        <xs:annotation>
+            <xs:appinfo>This schema defines a RestNEXT Security Metadata.</xs:appinfo>
+            <xs:documentation source="description">
+                This is the root element of the descriptor.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="security" maxOccurs="unbounded">
+                    <xs:annotation>
+                        <xs:documentation source="description">
+                            This element represents the security metadata.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="path">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the security path.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:pattern value="([/])(([/\w])+(/\{[\w]+\})*)*([?])?"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+
+                            <xs:element name="provider">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the lambda string method reference security provider.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:pattern value="([\w.])*([:]{2})(\w)+"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+
+                            <xs:element name="enable" type="xs:boolean" minOccurs="0" default="true">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines if this security path is enable or not.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

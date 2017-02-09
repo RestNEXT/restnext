@@ -18,134 +18,141 @@ After several searches on the WWW, I have not found a framework easy to use, hig
   - Simple usage:
   
     ```java
-    public static void main(String[] args) {
-        ServerInitializer
-            .route("/", req -> Response.ok("it works").build())
-            .route("/ping", req -> Response.ok("pong").build())
-        .start();
+    class SimpleExample {
+        public static void main(String[] args) {
+            ServerInitializer
+                .route("/", req -> Response.ok("it works").build())
+                .route("/ping", req -> Response.ok("pong").build())
+                .start();
+        }
     }
     ```
     
   - More complete example:
   
     ```java
-    public static void main(String[] args) {
-
-        Function<Request, Response> provider = request -> Response.ok("ok".getBytes()).build();
-
-        Function<Request, Response> etagProvider = request -> {
-            EntityTag entityTag = new EntityTag("someCalculatedEtagValue");
-            return Optional.ofNullable(request.evaluatePreconditions(entityTag))
-                    .orElse(Response.ok().tag(entityTag))
-                    .build();
-        };
-
-        Function<Request, Boolean> secureProvider = request -> true;
-
-        Route.Mapping[] routes = {
-                Route.Mapping.uri("/1", provider).build(),
-                Route.Mapping.uri("/2", etagProvider).build()
-        };
-
-        Security.Mapping[] secures = {
-                Security.Mapping.uri("/1", secureProvider).build(),
-                Security.Mapping.uri("/2", secureProvider).build()
-        };
-
-        ServerInitializer.builder()
-                // automatic registration approach with default path. ($user.dir/route | $user.dir/security)
-                .enableRoutesScan()
-                .enableSecurityRoutesScan()
-
-                // automatic registration approach with custom path.
-                .enableRoutesScan(Paths.get(System.getProperty("user.home")))
-                .enableSecurityRoutesScan(Paths.get(System.getProperty("user.home"), "sec"))
-
-                // manual registration approach.
-                .route(uri, etagProvider)
-                .secure(uri, secureProvider)
-
-                // multiple manual registration approach.
-                .routes(routes)
-                .secures(secures)
-
-                .start();
+    class MoreCompleteExample {
+        public static void main(String[] args) {
+    
+            Function<Request, Response> provider = request -> Response.ok("ok").build();
+    
+            Function<Request, Response> etagProvider = request -> {
+                EntityTag entityTag = new EntityTag("contentCalculatedEtagValue");
+                return Optional.ofNullable(request.evaluatePreconditions(entityTag))
+                        .orElse(Response.ok().tag(entityTag))
+                        .build();
+            };
+    
+            Function<Request, Boolean> secureProvider = request -> true;
+    
+            Route.Mapping[] routes = {
+                    Route.Mapping.uri("/1", provider).build(),
+                    Route.Mapping.uri("/2", etagProvider).build()
+            };
+    
+            Security.Mapping[] secures = {
+                    Security.Mapping.uri("/1", secureProvider).build(),
+                    Security.Mapping.uri("/2", secureProvider).build()
+            };
+    
+            ServerInitializer.builder()
+                    // automatic registration approach with default path. ($user.dir/route | $user.dir/security)
+                    .enableRoutesScan()
+                    .enableSecurityRoutesScan()
+                    // automatic registration approach with custom path.
+                    .enableRoutesScan(Paths.get(System.getProperty("user.home")))
+                    .enableSecurityRoutesScan(Paths.get(System.getProperty("user.home"), "sec"))
+                    // manual registration approach.
+                    .route(uri, etagProvider)
+                    .secure(uri, secureProvider)
+                    // multiple manual registration approach.
+                    .routes(routes)
+                    .secures(secures)
+                    // build and start the server.
+                    .start();
+        }
     }
     ```
 ***NOTE:***
 
-When you enable route/security auto scanning, the default directory path or the custom directory path provided will be monitored to listen to event creation, modification and deletion of .jar files. For automatic registration to work properly, the .jar file should contain the following directory structure:
+When you enable route/security scanning, the default or custom directory path provided will be monitored to listen to event of creation, modification and deletion of the .jar file. For automatic registration to work properly, the .jar file should contain the following directory structure:
 
 ```sh
-    /META-INF/route/*.json
-    /META-INF/security/*.json
+    /META-INF/route/*.xml
+    /META-INF/security/*.xml
 ```
 
 Each folder (route / security) can contain as many JSON files you want, and the name of the JSON file can be any name you want.
 
-Route.json example:
+routes.xml example:
 
-```json
-[
-  {
-    "uri": "/test",
-    "provider": "br.com.thiaguten.restnetty.route.Test::process",
-    "enable": true,
-    "methods": ["GET"]
-  },
-  {
-    "uri": "/test/{name}",
-    "provider": "br.com.thiaguten.restnetty.route.Test::process2",
-    "enable": true,
-    "methods": ["GET"]
-  },
-  {
-    "uri": "/test/regex/\\d+",
-    "provider": "br.com.thiaguten.restnetty.route.Test::process3",
-    "enable": true,
-    "methods": ["GET"],
-    "medias": ["text/plain"]
-  }
-]
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<routes xmlns="http://www.restnext.org/routes">
+    <route>
+        <path>/test</path>
+        <provider>br.com.thiaguten.route.Provider::anyMethodNameYouWant</provider>
+        <methods>
+            <method>GET</method>
+            <method>POST</method>
+        </methods>
+        <medias>
+            <media>text/plain</media>
+            <media>application/json</media>
+        </medias>
+    </route>
+    <route>
+        <path>/test/{name}</path>
+        <provider>br.com.thiaguten.route.Provider::test2</provider>
+    </route>
+    <route>
+        <path>/test/regex/\\d+</path>
+        <provider>br.com.thiaguten.route.Provider::test3</provider>
+        <enable>false</enable>
+    </route>
+</routes>
 ```
 
-Security.json example:
-
-```json
-[
-  {
-    "uri": "/test",
-    "provider": "br.com.thiaguten.restnetty.security.Test::validate",
-    "enable": true
-  },
-  {
-    "uri": "/test/{name}",
-    "provider": "br.com.thiaguten.restnetty.security.Test::validate",
-    "enable": true
-  },
-  {
-    "uri": "/test/regex/\\d+",
-    "provider": "br.com.thiaguten.restnetty.security.Test::validate",
-    "enable": true
-  }
-]
-```
-
-The route JSON provider property value **must** be a static method respecting the following signature:
+The route XML </provider> property value **must** have Method Reference syntax and the class method must be public and static, respecting the following signature:
 
 ```java
-public static Response anyMethodNameYouWant(Request request) {
-    // process the request and write some response.
-    return ...;
+class Provider {
+    public static Response anyMethodNameYouWant(Request request) {
+        // process the request and write some response.
+        return Response.ok().build();
+    }
 }
 ```
 
-The security JSON provider property value **must** be a static method respecting the following signature:
+security.xml example:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<securities xmlns="http://www.restnext.org/securities">
+    <security>
+        <path>/test</path>
+        <provider>br.com.thiaguten.security.Provider::anyMethodNameYouWant</provider>
+    </security>
+    <security>
+        <path>/test/{name}</path>
+        <provider>br.com.thiaguten.security.Provider::test2</provider>
+        <enable>false</enable>
+    </security>
+    <security>
+        <path>/test/regex/\\d+</path>
+        <provider>br.com.thiaguten.security.Provider::test3</provider>
+    </security>
+</securities>
+```
+
+The security XML </provider> property value **must** have Method Reference syntax and the class method must be public and static, respecting the following signature:
 
 ```java
-public static boolean anyMethodNameYouWant(Request request) {
-    // validate the request.
-    return ...;
+class Provider {
+    public static boolean anyMethodNameYouWant(Request request) {
+        // validate the request.
+        return Response.ok().build();
+    }
 }
 ```
 
@@ -161,13 +168,13 @@ Maven Artifact:
 <dependency>
     <groupId>org.restnext</groupId>
     <artifactId>restnext-server</artifactId>
-    <version>0.1.1</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
-### Todos
+### TODOS
 
  - Write Tests
  - Add Javadoc and Code Comments
 
-**Fell free to contribute!**
+####Fell free to contribute!

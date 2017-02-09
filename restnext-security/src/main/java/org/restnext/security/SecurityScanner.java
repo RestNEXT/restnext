@@ -15,16 +15,18 @@
  */
 package org.restnext.security;
 
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.classpath.ClasspathRegister;
-import org.restnext.util.JsonUtils;
 import io.netty.util.internal.SystemPropertyUtil;
+import org.restnext.core.classpath.ClasspathRegister;
+import org.restnext.core.http.codec.Request;
+import org.restnext.core.jaxb.Securities;
+import org.restnext.util.JAXB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaFactory;
 import pl.joegreen.lambdaFromString.LambdaFactoryConfiguration;
 import pl.joegreen.lambdaFromString.TypeReference;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
@@ -44,6 +46,7 @@ public final class SecurityScanner {
 
     private final Security security;
     private final Path securityDirectory;
+    private final JAXB securityJaxb;
     private final Map<Path, Map<Path, Set<String>>> jarSecurityFileMap = new HashMap<>(); // the security jars metadata.
 
     private LambdaFactory lambdaFactory;
@@ -60,6 +63,7 @@ public final class SecurityScanner {
 
         this.security = security;
         this.securityDirectory = securityDirectory;
+        this.securityJaxb = new JAXB("security.xsd", Securities.class);
 
         // start task for watching security dir for changes.
         new Thread(new SecurityWatcher(this), "security-dir-watcher").start();
@@ -122,8 +126,8 @@ public final class SecurityScanner {
         try (FileSystem fs = FileSystems.newFileSystem(jar, null)) {
             final Path internalSecurityDir = fs.getPath("/META-INF/security/");
             if (Files.exists(internalSecurityDir)) {
-                Set<Path> internalSecurityFiles = listChildren(internalSecurityDir, "*.json");
-                Map<Path, Set<String>> securityFileUriMap = new HashMap<>(); // the jars security json metadata.
+                Set<Path> internalSecurityFiles = listChildren(internalSecurityDir, "*.xml");
+                Map<Path, Set<String>> securityFileUriMap = new HashMap<>(); // the jars security metadata.
                 internalSecurityFiles.forEach(securityFile -> {
                     Path securityFilename = securityFile.getFileName();
                     Set<String> securityUris = securityFileUriMap.get(securityFilename);
@@ -140,19 +144,14 @@ public final class SecurityScanner {
     private Set<String> readAndRegister(final Path securityFile) {
         Set<String> registeredUris = new HashSet<>();
         try (InputStream is = Files.newInputStream(securityFile)) {
-            final SecurityScanner.Metadata[] securitiesMetadata = JsonUtils.fromJson(is, SecurityScanner.Metadata[].class);
+            Securities securities = securityJaxb.unmarshal(is, Securities.class);
 
-            for (SecurityScanner.Metadata securityMetadata : securitiesMetadata) {
+            for (Securities.Security security : securities.getSecurity()) {
                 // required metadata.
-                final String uri = securityMetadata.getUri();
-                final String provider = securityMetadata.getProvider();
-
-                // verify if some required metadata was informed, otherwise ignore.
-                // TODO maybe in the future validate it with some json schema implementation.
-                if (uri == null && provider == null) continue;
-
+                final String uri = security.getPath();
+                final String provider = security.getProvider();
                 // optional metadata.
-                final boolean enable = securityMetadata.isEnable();
+                final boolean enable = security.getEnable() == null ? true : security.getEnable();
 
                 /*
                   https://github.com/greenjoe/lambdaFromString#code-examples:
@@ -163,7 +162,7 @@ public final class SecurityScanner {
                 */
                 Function<Request, Boolean> securityProvider = lambdaFactory.createLambdaUnchecked(provider, new TypeReference<Function<Request,Boolean>>() {});
 
-                // verify if the uri is already registered by another json file inside some jar file.
+                // verify if the uri is already registered by another file inside some jar file.
                 boolean uriAlreadyRegistered = false;
                 Path jarFilenameRegistered = null, securityFilenameRegistered = null;
                 for (Map.Entry<Path, Map<Path, Set<String>>> jarEntry : jarSecurityFileMap.entrySet()) {
@@ -175,50 +174,15 @@ public final class SecurityScanner {
                 }
 
                 if (!uriAlreadyRegistered) {
-                    security.register(Security.Mapping.uri(uri, securityProvider).enable(enable).build());
+                    this.security.register(Security.Mapping.uri(uri, securityProvider).enable(enable).build());
                     registeredUris.add(uri);
                 } else {
                     log.warn("Uri {} already registered through the security file {} inside the jar {}", uri, securityFilenameRegistered, jarFilenameRegistered);
                 }
             }
-        } catch (IOException ignore) {}
+        } catch (IOException | JAXBException e) {
+            log.error("Could not register the security metadata in the XML file '{}'.", securityFile, e);
+        }
         return registeredUris;
-    }
-
-    // inner json file metadata class
-
-    private static final class Metadata {
-
-        private String uri;
-        private String provider;
-        private boolean enable;
-
-        public Metadata() {
-            super();
-        }
-
-        public String getUri() {
-            return uri;
-        }
-
-        public void setUri(String uri) {
-            this.uri = uri;
-        }
-
-        public String getProvider() {
-            return provider;
-        }
-
-        public void setProvider(String provider) {
-            this.provider = provider;
-        }
-
-        public boolean isEnable() {
-            return enable;
-        }
-
-        public void setEnable(boolean enable) {
-            this.enable = enable;
-        }
     }
 }

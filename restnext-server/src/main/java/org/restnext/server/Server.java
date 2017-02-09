@@ -24,9 +24,6 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.Future;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.codec.Response;
 import org.restnext.util.AnsiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +36,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -70,22 +65,6 @@ public final class Server {
             }
         });
         if (autoStart) start();
-    }
-
-    public static void main(String[] args) {
-        final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
-
-        Function<Request, Response> provider = r -> {
-            // simulate long response process
-//            try {
-//                timeUnit.sleep(3);
-//            } catch (InterruptedException e) {
-//                //nop
-//            }
-            return Response.ok("it works", MediaType.TEXT).build();
-        };
-
-        ServerInitializer.route("/", provider).timeout(10, timeUnit).start();
     }
 
     public void start() {

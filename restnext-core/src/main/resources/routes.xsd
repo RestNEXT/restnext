@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.restnext.org/routes"
+           xmlns="http://www.restnext.org/routes"
+           elementFormDefault="qualified">
+
+    <xs:element name="routes">
+        <xs:annotation>
+            <xs:appinfo>This schema defines a RestNEXT Route Metadata.</xs:appinfo>
+            <xs:documentation source="description">
+                This is the root element of the descriptor.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="route" maxOccurs="unbounded">
+                    <xs:annotation>
+                        <xs:documentation source="description">
+                            This element represents the route metadata.
+                        </xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:all>
+                            <xs:element name="path">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the route path.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:pattern value="([/])(([/\w])+(/\{[\w]+\})*)*([?])?"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+
+                            <xs:element name="provider">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the lambda string method reference route provider.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:pattern value="([\w.])*([:]{2})(\w)+"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+
+                            <xs:element name="enable" type="xs:boolean" minOccurs="0" default="true">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines if this route path is enable or not.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+
+                            <xs:element name="methods" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the route allowed http methods.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="method" maxOccurs="unbounded">
+                                            <xs:annotation>
+                                                <xs:documentation source="description">
+                                                    This element defines a http method.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:enumeration value="GET"/>
+                                                    <xs:enumeration value="POST"/>
+                                                    <xs:enumeration value="PUT"/>
+                                                    <xs:enumeration value="PATCH"/>
+                                                    <xs:enumeration value="DELETE"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+
+                            <xs:element name="medias" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the route allowed media types.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="media" type="xs:string" maxOccurs="unbounded">
+                                            <xs:annotation>
+                                                <xs:documentation source="description">
+                                                    This element defines a media type.
+                                                </xs:documentation>
+                                            </xs:annotation>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+
+                        </xs:all>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

@@ -15,23 +15,26 @@
  */
 package org.restnext.route;
 
+import io.netty.util.internal.SystemPropertyUtil;
+import org.restnext.core.classpath.ClasspathRegister;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.codec.Request;
 import org.restnext.core.http.codec.Response;
-import org.restnext.core.classpath.ClasspathRegister;
-import org.restnext.util.JsonUtils;
-import io.netty.util.internal.SystemPropertyUtil;
+import org.restnext.core.jaxb.Routes;
+import org.restnext.util.JAXB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaFactory;
 import pl.joegreen.lambdaFromString.LambdaFactoryConfiguration;
 import pl.joegreen.lambdaFromString.TypeReference;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.restnext.util.FileUtils.listChildren;
 
@@ -46,6 +49,7 @@ public final class RouteScanner {
 
     private final Route route;
     private final Path routeDirectory;
+    private final JAXB routesJaxb;
     private final Map<Path, Map<Path, Set<String>>> jarRouteFileMap = new HashMap<>(); // the route jars metadata.
 
     private LambdaFactory lambdaFactory;
@@ -62,6 +66,7 @@ public final class RouteScanner {
 
         this.route = route;
         this.routeDirectory = routeDirectory;
+        this.routesJaxb = new JAXB("routes.xsd", Routes.class);
 
         // start task for watching route dir for changes.
         new Thread(new RouteWatcher(this), "route-dir-watcher").start();
@@ -125,8 +130,8 @@ public final class RouteScanner {
         try (FileSystem fs = FileSystems.newFileSystem(jar, null)) {
             final Path internalRouteDir = fs.getPath("/META-INF/route/");
             if (Files.exists(internalRouteDir)) {
-                Set<Path> internalRouteFiles = listChildren(internalRouteDir, "*.json");
-                Map<Path, Set<String>> routeFileUriMap = new HashMap<>(); // the jars route json metadata.
+                Set<Path> internalRouteFiles = listChildren(internalRouteDir, "*.xml");
+                Map<Path, Set<String>> routeFileUriMap = new HashMap<>(); // the jars route metadata.
                 internalRouteFiles.forEach(routeFile -> {
                     Path routeFilename = routeFile.getFileName();
                     Set<String> routeUris = routeFileUriMap.get(routeFilename);
@@ -143,21 +148,19 @@ public final class RouteScanner {
     private Set<String> readAndRegister(final Path routeFile) {
         Set<String> registeredUris = new HashSet<>();
         try (InputStream is = Files.newInputStream(routeFile)) {
-            final RouteScanner.Metadata[] routesMetadata = JsonUtils.fromJson(is, RouteScanner.Metadata[].class);
-
-            for (RouteScanner.Metadata routeMetadata : routesMetadata) {
+            Routes routes = routesJaxb.unmarshal(is, Routes.class);
+            for (Routes.Route route : routes.getRoute()) {
                 // required metadata.
-                final String uri = routeMetadata.getUri();
-                final String provider = routeMetadata.getProvider();
-
-                // verify if some required metadata was informed, otherwise ignore.
-                // TODO maybe in the future validate it with some json schema implementation.
-                if (uri == null && provider == null) continue;
-
+                final String uri = route.getPath();
+                final String provider = route.getProvider();
                 // optional metadata.
-                final boolean enable = routeMetadata.isEnable();
-                final List<Request.Method> methods = routeMetadata.getMethods();
-                final List<MediaType> medias = routeMetadata.getMedias();
+                final boolean enable = route.getEnable() == null ? true : route.getEnable();
+                final List<String> methodList = route.getMethods().getMethod();
+                final List<String> mediaList = route.getMedias().getMedia();
+                // parse http methods string to http methods object.
+                final List<Request.Method> methods = methodList.stream().map(Request.Method::of).collect(Collectors.toList());
+                // parse media types string to media types object.
+                final List<MediaType> medias = mediaList.stream().map(MediaType::parse).collect(Collectors.toList());
 
                 /*
                   https://github.com/greenjoe/lambdaFromString#code-examples:
@@ -168,7 +171,7 @@ public final class RouteScanner {
                 */
                 Function<Request, Response> routeProvider = lambdaFactory.createLambdaUnchecked(provider, new TypeReference<Function<Request,Response>>() {});
 
-                // verify if the uri is already registered by another json file inside some jar file.
+                // verify if the uri is already registered by another jaxb file inside some jar file.
                 boolean uriAlreadyRegistered = false;
                 Path jarFilenameRegistered = null, routeFilenameRegistered = null;
                 for (Map.Entry<Path, Map<Path, Set<String>>> jarEntry : jarRouteFileMap.entrySet()) {
@@ -180,71 +183,18 @@ public final class RouteScanner {
                 }
 
                 if (!uriAlreadyRegistered) {
-                    Route.Mapping.Builder routeMappingBuilder = Route.Mapping.uri(uri, routeProvider);
+                    Route.Mapping.Builder routeMappingBuilder = Route.Mapping.uri(uri, routeProvider).enable(enable);
                     if (methods != null) routeMappingBuilder.methods(methods.toArray(new Request.Method[methods.size()]));
                     if (medias != null) routeMappingBuilder.medias(medias.toArray(new MediaType[medias.size()]));
-                    route.register(routeMappingBuilder.enable(enable).build());
+                    this.route.register(routeMappingBuilder.build());
                     registeredUris.add(uri);
                 } else {
                     log.warn("Uri {} already registered through the route file {} inside the jar {}", uri, routeFilenameRegistered, jarFilenameRegistered);
                 }
             }
-        } catch (IOException ignore) {}
+        } catch (IOException | JAXBException e) {
+            log.error("Could not register the route metadata in the XML file '{}'.", routeFile, e);
+        }
         return registeredUris;
-    }
-
-    // inner json file metadata class
-
-    private static final class Metadata {
-
-        private String uri;
-        private String provider;
-        private boolean enable;
-        private List<MediaType> medias;
-        private List<Request.Method> methods;
-
-        public Metadata() {
-            super();
-        }
-
-        public String getUri() {
-            return uri;
-        }
-
-        public void setUri(String uri) {
-            this.uri = uri;
-        }
-
-        public String getProvider() {
-            return provider;
-        }
-
-        public void setProvider(String provider) {
-            this.provider = provider;
-        }
-
-        public boolean isEnable() {
-            return enable;
-        }
-
-        public void setEnable(boolean enable) {
-            this.enable = enable;
-        }
-
-        public List<Request.Method> getMethods() {
-            return methods;
-        }
-
-        public void setMethods(List<Request.Method> methods) {
-            this.methods = methods;
-        }
-
-        public List<MediaType> getMedias() {
-            return medias;
-        }
-
-        public void setMedias(List<MediaType> medias) {
-            this.medias = medias;
-        }
     }
 }

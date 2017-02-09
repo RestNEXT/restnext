@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.restnext</groupId>
         <artifactId>restnext</artifactId>
-        <version>0.1.2-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>restnext-core</artifactId>
@@ -24,6 +24,43 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>schemas</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <schemaDirectory>${project.basedir}/src/main/resources</schemaDirectory>
+                    <schemaIncludes>
+                        <include>*.xsd</include>
+                    </schemaIncludes>
+                    <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+                    <generatePackage>org.restnext.core.jaxb</generatePackage>
+                    <cleanPackageDirectories>true</cleanPackageDirectories>
+                    <noFileHeader>true</noFileHeader>
+                    <enableIntrospection>true</enableIntrospection>
+                    <markGenerated>false</markGenerated>
+                    <packageLevelAnnotations>false</packageLevelAnnotations>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <specVersion>2.2</specVersion>
+                    <args>
+                        <!--<arg>-no-header</arg>-->
+                        <!--<arg>-enableIntrospection</arg>-->
+                        <arg>-npa</arg>
+                    </args>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>

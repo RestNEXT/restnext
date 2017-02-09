@@ -53,7 +53,8 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     private final int maxContentLength;
     private final InetSocketAddress bindAddress;
     private final Timeout timeout;
-    private final boolean enableAsyncResponse;
+
+    private static final ServerHandler SHARED_SERVER_HANDLER = new ServerHandler();
 
     private ServerInitializer(final Builder builder) {
         this.sslCtx = builder.sslContext;
@@ -61,7 +62,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         this.maxContentLength = builder.maxContentLength;
         this.bindAddress = builder.bindAddress;
         this.timeout = builder.timeout;
-        this.enableAsyncResponse = builder.enableAsyncResponse;
     }
 
     @Override
@@ -72,8 +72,8 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
         pipeline.addLast("streamer", new ChunkedWriteHandler());
         if (corsConfig != null) ch.pipeline().addLast("cors", new CorsHandler(corsConfig));
-        if (timeout != null) pipeline.addLast("readTimeoutHandler", new ReadTimeoutHandler(timeout.time, timeout.unit));
-        pipeline.addLast("handler", new ServerHandler(enableAsyncResponse));
+        if (timeout != null) pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
+        pipeline.addLast("handler", SHARED_SERVER_HANDLER);
     }
 
     // getters methods
@@ -98,10 +98,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         return timeout;
     }
 
-    public boolean isEnableAsyncResponse() {
-        return enableAsyncResponse;
-    }
-
     // static methods
 
     public static Builder builder() {
@@ -116,17 +112,18 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         return builder().routes(routesMapping);
     }
 
-    static final class Timeout {
+    // inner support class
 
-        private final long time;
+    static final class Timeout {
+        private final long amount;
         private final TimeUnit unit;
 
         Timeout() {
             this(30, TimeUnit.SECONDS);
         }
 
-        Timeout(long time, TimeUnit unit) {
-            this.time = time;
+        Timeout(long amount, TimeUnit unit) {
+            this.amount = amount;
             this.unit = unit;
         }
     }
@@ -136,11 +133,10 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     public static final class Builder {
 
         private int maxContentLength = 64 * 1024;
-        private boolean enableAsyncResponse = true;
-        private CorsConfig corsConfig = getCorsConfig();
+        private Timeout timeout = new Timeout();
+        private CorsConfig corsConfig /*= getCorsConfig()*/;
         private SslContext sslContext /*= getSslContext()*/;
         private InetSocketAddress bindAddress = new InetSocketAddress(8080);
-        private Timeout timeout = new Timeout();
 
         public Builder bindAddress(InetSocketAddress bindAddress) {
             this.bindAddress = bindAddress;
@@ -154,11 +150,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
         public Builder maxContentLength(int maxContentLength) {
             this.maxContentLength = maxContentLength;
-            return this;
-        }
-
-        public Builder enableAsyncResponse(boolean enableAsyncResponse) {
-            this.enableAsyncResponse = enableAsyncResponse;
             return this;
         }
 
@@ -211,8 +202,8 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         public ServerInitializer build() {
-            // build and register default health check route.
-            route("/healthcheck", request -> Response.ok().version(request.getVersion()).build());
+            // register default health check route.
+            route("/healthcheck", request -> Response.ok().build());
             return new ServerInitializer(this);
         }
 

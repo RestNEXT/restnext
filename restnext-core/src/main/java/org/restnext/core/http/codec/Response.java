@@ -277,7 +277,7 @@ public interface Response extends Message, Headers {
     }
 
     static Response.Builder ok(String content, Charset charset) {
-        return ok(content.getBytes(charset));
+        return ok(content, charset, MediaType.TEXT_UTF8);
     }
 
     static Response.Builder ok(String content, String mediaType) {
