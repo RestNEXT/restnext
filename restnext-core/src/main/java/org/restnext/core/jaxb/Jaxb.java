@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.restnext.util;
+package org.restnext.core.jaxb;
 
 import org.xml.sax.SAXException;
 
@@ -27,7 +27,9 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.File;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
@@ -36,11 +38,11 @@ import java.util.Map;
 //import javax.jaxb.stream.XMLStreamException;
 
 /**
- * JAXB utility class.
+ * Jaxb utility class.
  *
  * @author Thiago Gutenberg Carvalho da Costa
  */
-public final class JAXB {
+public final class Jaxb {
 
     private final JAXBContext context;
     private final Marshaller marshaller;
@@ -48,11 +50,11 @@ public final class JAXB {
 
     // constructor
 
-    public JAXB(Class<?>... classes) {
+    public Jaxb(Class<?>... classes) {
         this(null, classes);
     }
 
-    public JAXB(String schemaXml, Class<?>... classes) {
+    public Jaxb(String schemaXml, Class<?>... classes) {
         try {
             this.context = JAXBContext.newInstance(classes);
             this.marshaller = context.createMarshaller();
@@ -104,18 +106,24 @@ public final class JAXB {
         return sw.toString();
     }
 
+    public <T> T unmarshal(String xml, Class<T> returnClass) throws JAXBException {
+        try (StringReader reader = new StringReader(xml)) {
+            return returnClass.cast(unmarshaller.unmarshal(reader));
+        }
+    }
+
     public <T> T unmarshal(InputStream xml, Class<T> returnClass) throws JAXBException {
         return returnClass.cast(unmarshaller.unmarshal(xml));
     }
 
-    public <T> T unmarshal(File xml, Class<T> returnClass) throws JAXBException {
+    public <T> T unmarshal(Path xml, Class<T> returnClass) throws JAXBException {
         /*
-         * JAXB
+         * Jaxb
          */
-        return returnClass.cast(unmarshaller.unmarshal(xml));
+        return returnClass.cast(unmarshaller.unmarshal(xml.toFile()));
 
         /*
-         * JAXB + StAX
+         * Jaxb + StAX
          */
 //        XMLInputFactory xif = XMLInputFactory.newFactory();
 //        XMLStreamReader xsr = null;
@@ -138,7 +146,7 @@ public final class JAXB {
 //        }
 
         /*
-         * JAXB + Woodstox
+         * Jaxb + Woodstox
          */
 //        XMLInputFactory2 xif2 = (XMLInputFactory2) XMLInputFactory2.newFactory();
 //        xif2.configureForLowMemUsage();

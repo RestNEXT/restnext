@@ -18,10 +18,11 @@ package org.restnext.security;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.restnext.core.classpath.ClasspathRegister;
 import org.restnext.core.http.codec.Request;
-import org.restnext.core.jaxb.Securities;
-import org.restnext.util.JAXB;
+import org.restnext.core.jaxb.Jaxb;
+import org.restnext.core.jaxb.internal.Securities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.joegreen.lambdaFromString.LambdaCreationException;
 import pl.joegreen.lambdaFromString.LambdaFactory;
 import pl.joegreen.lambdaFromString.LambdaFactoryConfiguration;
 import pl.joegreen.lambdaFromString.TypeReference;
@@ -33,6 +34,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.Function;
 
+import static org.restnext.util.FileUtils.deepListChildren;
 import static org.restnext.util.FileUtils.listChildren;
 
 /**
@@ -40,14 +42,14 @@ import static org.restnext.util.FileUtils.listChildren;
  */
 public final class SecurityScanner {
 
-    private static final Logger log = LoggerFactory.getLogger(SecurityScanner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityScanner.class);
 
     public static final Path DEFAULT_SECURITY_DIR = Paths.get(SystemPropertyUtil.get("user.dir"), "security");
 
     private final Security security;
+    private final Jaxb securityJaxb;
     private final Path securityDirectory;
-    private final JAXB securityJaxb;
-    private final Map<Path, Map<Path, Set<String>>> jarSecurityFileMap = new HashMap<>(); // the security jars metadata.
+    private final Map<Path, Map<Path, Set<Security.Mapping>>> securityJarFilesMap = new HashMap<>();
 
     private LambdaFactory lambdaFactory;
 
@@ -63,7 +65,7 @@ public final class SecurityScanner {
 
         this.security = security;
         this.securityDirectory = securityDirectory;
-        this.securityJaxb = new JAXB("security.xsd", Securities.class);
+        this.securityJaxb = new Jaxb("security.xsd", Securities.class);
 
         // start task for watching security dir for changes.
         new Thread(new SecurityWatcher(this), "security-dir-watcher").start();
@@ -84,14 +86,13 @@ public final class SecurityScanner {
     }
 
     void remove(final Path jar) {
-        Iterator<Map.Entry<Path, Map<Path, Set<String>>>> iterator = jarSecurityFileMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Path, Map<Path, Set<String>>> jarEntry = iterator.next();
-            Path jarfileNameRegistered = jarEntry.getKey();
-            if (jarfileNameRegistered.equals(jar.getFileName())) {
-                for (Map.Entry<Path, Set<String>> securityFileEntry : jarEntry.getValue().entrySet()) {
-                    securityFileEntry.getValue().forEach(security::unregister);
-                    iterator.remove();
+        Iterator<Map.Entry<Path, Map<Path, Set<Security.Mapping>>>> jarIterator = securityJarFilesMap.entrySet().iterator();
+        while (jarIterator.hasNext()) {
+            Map.Entry<Path, Map<Path, Set<Security.Mapping>>> jarEntry = jarIterator.next();
+            if (jarEntry.getKey().equals(jar.getFileName())) {
+                for (Map.Entry<Path, Set<Security.Mapping>> securityFileEntry : jarEntry.getValue().entrySet()) {
+                    securityFileEntry.getValue().forEach(this.security::unregister);
+                    jarIterator.remove();
                 }
             }
         }
@@ -106,8 +107,8 @@ public final class SecurityScanner {
     // private methods
 
     private void createLambda(final Set<Path> jars) {
-        String classpath = SystemPropertyUtil.get("java.class.path");
-        StringJoiner compilationClassPathJoiner = new StringJoiner(":")
+        final String classpath = SystemPropertyUtil.get("java.class.path");
+        final StringJoiner compilationClassPathJoiner = new StringJoiner(":")
                 .add(classpath);
 
         jars.forEach(jar -> {
@@ -124,34 +125,37 @@ public final class SecurityScanner {
 
     private void lookupSecurityFiles(final Path jar) {
         try (FileSystem fs = FileSystems.newFileSystem(jar, null)) {
-            final Path internalSecurityDir = fs.getPath("/META-INF/security/");
-            if (Files.exists(internalSecurityDir)) {
-                Set<Path> internalSecurityFiles = listChildren(internalSecurityDir, "*.xml");
-                Map<Path, Set<String>> securityFileUriMap = new HashMap<>(); // the jars security metadata.
-                internalSecurityFiles.forEach(securityFile -> {
-                    Path securityFilename = securityFile.getFileName();
-                    Set<String> securityUris = securityFileUriMap.get(securityFilename);
-                    if (securityUris == null)
-                        securityFileUriMap.put(securityFilename, readAndRegister(securityFile));
-                    else
-                        log.warn("Duplicated security file {} found in the same jar {}", securityFile, jar);
-                });
-                jarSecurityFileMap.put(jar.getFileName(), securityFileUriMap);
+            final Path securityDirectory = fs.getPath("/META-INF/security/");
+            if (Files.exists(securityDirectory)) {
+                Set<Path> securityFiles = deepListChildren(securityDirectory, "*.xml");
+                // maps the jar filename with its security files
+                securityJarFilesMap.put(jar.getFileName(), readAll(securityFiles));
             }
-        } catch (IOException ignore) {}
+        } catch (IOException e) {
+            LOGGER.error("Could not constructs a new fileSystem to access the contents of the file {} as a file system.", jar, e);
+        }
     }
 
-    private Set<String> readAndRegister(final Path securityFile) {
-        Set<String> registeredUris = new HashSet<>();
+    private Map<Path, Set<Security.Mapping>> readAll(final Set<Path> securityFiles) {
+        final Map<Path, Set<Security.Mapping>> securityFileMappings = new HashMap<>(securityFiles.size());
+        // iterates over the security file paths
+        for (Path securityFile : securityFiles) {
+            // maps the security file path with its security mappings
+            securityFileMappings.put(securityFile, read(securityFile));
+        }
+        return Collections.unmodifiableMap(new HashMap<>(securityFileMappings));
+    }
+
+    private Set<Security.Mapping> read(final Path securityFile) {
+        Set<Security.Mapping> mappings = new HashSet<>();
         try (InputStream is = Files.newInputStream(securityFile)) {
+            // deserialize the input stream
             Securities securities = securityJaxb.unmarshal(is, Securities.class);
 
+            // iterates over the security entries
             for (Securities.Security security : securities.getSecurity()) {
-                // required metadata.
-                final String uri = security.getPath();
-                final String provider = security.getProvider();
-                // optional metadata.
-                final boolean enable = security.getEnable() == null ? true : security.getEnable();
+                String uri = security.getPath();
+                Boolean enable = security.getEnable();
 
                 /*
                   https://github.com/greenjoe/lambdaFromString#code-examples:
@@ -160,29 +164,28 @@ public final class SecurityScanner {
                   The library is rather intended to be used once during the configuration reading process when
                   the application starts.
                 */
-                Function<Request, Boolean> securityProvider = lambdaFactory.createLambdaUnchecked(provider, new TypeReference<Function<Request,Boolean>>() {});
+                Function<Request, Boolean> provider = lambdaFactory.createLambda(security.getProvider(), new TypeReference<Function<Request, Boolean>>() {});
 
-                // verify if the uri is already registered by another file inside some jar file.
-                boolean uriAlreadyRegistered = false;
-                Path jarFilenameRegistered = null, securityFilenameRegistered = null;
-                for (Map.Entry<Path, Map<Path, Set<String>>> jarEntry : jarSecurityFileMap.entrySet()) {
-                    jarFilenameRegistered = jarEntry.getKey();
-                    for (Map.Entry<Path, Set<String>> securityFileEntry : jarEntry.getValue().entrySet()) {
-                        securityFilenameRegistered = securityFileEntry.getKey();
-                        uriAlreadyRegistered = !securityFilenameRegistered.equals(securityFile.getFileName()) && securityFileEntry.getValue().contains(uri);
-                    }
-                }
+                // checks if already has registered a mapping for the uri.
+                // To avoid creating unnecessary mapping objects.
+                Security.Mapping mapping = this.security.getSecurityMapping(uri);
+                if (mapping == null || !mapping.isEnable()) {
+                    // builds the mapping
+                    mapping = Security.Mapping.uri(uri, provider)
+                            .enable(enable)
+                            .build();
 
-                if (!uriAlreadyRegistered) {
-                    this.security.register(Security.Mapping.uri(uri, securityProvider).enable(enable).build());
-                    registeredUris.add(uri);
+                    // register the mapping
+                    this.security.register(mapping);
+                    mappings.add(mapping);
                 } else {
-                    log.warn("Uri {} already registered through the security file {} inside the jar {}", uri, securityFilenameRegistered, jarFilenameRegistered);
+                    LOGGER.warn("Ignoring the registration of the uri {} of the security file {} in the fileSystem {}, because it was already registered",
+                            uri, securityFile, securityFile.getFileSystem());
                 }
             }
-        } catch (IOException | JAXBException e) {
-            log.error("Could not register the security metadata in the XML file '{}'.", securityFile, e);
+        } catch (IOException | JAXBException | LambdaCreationException e) {
+            LOGGER.error("Could not read the security file '{}'", securityFile, e);
         }
-        return registeredUris;
+        return Collections.unmodifiableSet(new HashSet<>(mappings));
     }
 }

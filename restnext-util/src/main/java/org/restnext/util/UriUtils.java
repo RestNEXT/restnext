@@ -1,5 +1,6 @@
 package org.restnext.util;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -18,13 +19,24 @@ public final class UriUtils {
     }
 
     public static String normalize(String uri) {
-        if (uri != null) {
-            // adds initial slash in the uri if not exists.
-            if (uri.length() >= 1 && uri.charAt(0) != '/') uri = "/" + uri;
-            // removes the latest slash from the uri if exists.
-            if (uri.length() > 1 && uri.lastIndexOf('/') == (uri.length()-1)) uri = uri.substring(0, uri.lastIndexOf('/'));
-        }
-        return uri;
+        return Optional.ofNullable(uri)
+                .map(UriUtils::addFirstSlash)
+                .map(UriUtils::removeLastSlash)
+                .orElse(uri);
+    }
+
+    public static String addFirstSlash(String uri) {
+        return Optional.ofNullable(uri)
+                .filter(u -> u.length() >= 1 && u.charAt(0) != '/')
+                .map(u -> "/" + u)
+                .orElse(uri);
+    }
+
+    public static String removeLastSlash(String uri) {
+        return Optional.ofNullable(uri)
+                .filter(u -> u.length() > 1 && u.lastIndexOf('/') == (u.length() - 1))
+                .map(u -> u.substring(0, u.lastIndexOf('/')))
+                .orElse(uri);
     }
 
     public static boolean isPathParamUri(final String uri) {

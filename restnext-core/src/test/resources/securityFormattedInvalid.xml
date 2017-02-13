@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<securities xmlns="http://www.restnext.org/securities">
+    <security>
+        <path>alalalalalala</path>
+        <provider>%%%$##</provider>
+    </security>
+    <security>
+        <path>/test/{name}</path>
+        <provider>br.com.thiaguten.security.Provider:::::::::::test2</provider>
+        <enable>false</enable>
+    </security>
+    <security>
+        <path>/test/regex/\\d+</path>
+        <provider>br.com.thiaguten.security.Provider::test3</provider>
+    </security>
+</securities>
+

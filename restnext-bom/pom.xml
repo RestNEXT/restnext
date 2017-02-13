@@ -56,7 +56,6 @@
                 <groupId>org.fusesource.jansi</groupId>
                 <artifactId>jansi</artifactId>
                 <version>${jansi.version}</version>
-                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>pl.joegreen</groupId>

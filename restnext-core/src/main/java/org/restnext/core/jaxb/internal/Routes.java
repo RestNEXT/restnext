@@ -1,5 +1,5 @@
 
-package org.restnext.core.jaxb;
+package org.restnext.core.jaxb.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *             &lt;complexContent&gt;
  *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *                 &lt;all&gt;
- *                   &lt;element name="path"&gt;
- *                     &lt;simpleType&gt;
- *                       &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
- *                         &lt;pattern value="([/])(([/\w])+(/\{[\w]+\})*)*([?])?"/&gt;
- *                       &lt;/restriction&gt;
- *                     &lt;/simpleType&gt;
- *                   &lt;/element&gt;
+ *                   &lt;element name="path" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *                   &lt;element name="provider"&gt;
  *                     &lt;simpleType&gt;
  *                       &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
@@ -135,13 +129,7 @@ public class Routes {
      *   &lt;complexContent&gt;
      *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
      *       &lt;all&gt;
-     *         &lt;element name="path"&gt;
-     *           &lt;simpleType&gt;
-     *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
-     *               &lt;pattern value="([/])(([/\w])+(/\{[\w]+\})*)*([?])?"/&gt;
-     *             &lt;/restriction&gt;
-     *           &lt;/simpleType&gt;
-     *         &lt;/element&gt;
+     *         &lt;element name="path" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
      *         &lt;element name="provider"&gt;
      *           &lt;simpleType&gt;
      *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;

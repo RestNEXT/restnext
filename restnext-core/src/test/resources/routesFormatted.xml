@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<routes xmlns="http://www.restnext.org/routes">
+    <route>
+        <path>/test</path>
+        <provider>br.com.thiaguten.route.Provider::anyMethodNameYouWant</provider>
+        <methods>
+            <method>GET</method>
+            <method>POST</method>
+        </methods>
+        <medias>
+            <media>text/plain</media>
+            <media>application/json</media>
+        </medias>
+    </route>
+    <route>
+        <path>/test/{name}</path>
+        <provider>br.com.thiaguten.route.Provider::test2</provider>
+    </route>
+    <route>
+        <path>/test/regex/\\d+</path>
+        <provider>br.com.thiaguten.route.Provider::test3</provider>
+        <enable>false</enable>
+    </route>
+</routes>
+

@@ -21,6 +21,12 @@
                     </xs:annotation>
                     <xs:complexType>
                         <xs:all>
+                            <!-- comment this path element with regex validation
+                            because this entry can be:
+                            a path (/test),
+                            a path param (/test/{name}) or
+                            a path regex (/test/regex/\\d+).
+                            And this regex only match as valid the entries: (path and path param).
                             <xs:element name="path">
                                 <xs:annotation>
                                     <xs:documentation source="description">
@@ -32,6 +38,14 @@
                                         <xs:pattern value="([/])(([/\w])+(/\{[\w]+\})*)*([?])?"/>
                                     </xs:restriction>
                                 </xs:simpleType>
+                            </xs:element>
+                            -->
+                            <xs:element name="path" type="xs:string">
+                                <xs:annotation>
+                                    <xs:documentation source="description">
+                                        This element defines the route path.
+                                    </xs:documentation>
+                                </xs:annotation>
                             </xs:element>
 
                             <xs:element name="provider">

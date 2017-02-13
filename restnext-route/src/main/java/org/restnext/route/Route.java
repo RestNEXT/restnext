@@ -37,37 +37,40 @@ public enum Route {
 
     INSTANCE;
 
-    private static final Logger log = LoggerFactory.getLogger(Route.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Route.class);
 
-    private final Map<String, Route.Mapping> registerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, Route.Mapping> registry = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public final void register(final Route.Mapping routeMapping) {
         Objects.requireNonNull(routeMapping, "Route mapping must not be null");
 
         final String uri = routeMapping.getUri();
-        final Route.Mapping routeMappingRegistered = registerMap.get(uri);
+        final Route.Mapping routeMappingRegistered = registry.get(uri);
 
         if (routeMappingRegistered == null || !routeMappingRegistered.isEnable()) {
-            registerMap.put(uri, routeMapping);
-            log.debug("the route uri '{}' was registered.", uri);
+            registry.put(uri, routeMapping);
+            LOGGER.debug("the route uri '{}' was registered.", uri);
         } else {
-            log.warn("the route uri '{}' is already registered.", uri);
+            LOGGER.warn("the route uri '{}' is already registered.", uri);
         }
     }
 
     public void unregister(final String uri) {
-        if (getRouteMapping(uri) != null) registerMap.remove(uri);
+        if (getRouteMapping(uri) != null) registry.remove(uri);
+    }
+
+    public void unregister(final Route.Mapping mapping) {
+        unregister(mapping.getUri());
     }
 
     public Route.Mapping getRouteMapping(final String uri) {
-        for (Route.Mapping routeMapping : registerMap.values()) {
-            if (routeMapping != null && routeMapping.getUrlMatcher().matches(uri))
-                return routeMapping;
+        for (Route.Mapping routeMapping : registry.values()) {
+            if (routeMapping.getUrlMatcher().matches(uri)) return routeMapping;
         }
         return null;
     }
 
-    // inner builder class
+    // inner mapping class
 
     public static final class Mapping {
 
@@ -139,31 +142,28 @@ public enum Route {
             private List<MediaType> medias = Collections.emptyList();
             private List<Request.Method> methods = Collections.emptyList();
 
-            public Builder(final String _uri, final Function<Request, Response> _provider) {
-                Objects.requireNonNull(_uri, "Uri must not be null");
-                Objects.requireNonNull(_provider, "Provider must not be null");
+            public Builder(final String uri, final Function<Request, Response> provider) {
+                Objects.requireNonNull(uri, "Uri must not be null");
+                Objects.requireNonNull(provider, "Provider must not be null");
 
-                this.uri = normalize(_uri);
-                this.provider = _provider;
-
-                if (isPathParamUri(this.uri))
-                    this.urlMatcher = new UrlPattern(this.uri);
-                else
-                    this.urlMatcher = new UrlRegex(this.uri);
+                this.uri = normalize(uri);
+                this.provider = provider;
+                this.urlMatcher = isPathParamUri(this.uri) ? new UrlPattern(this.uri) : new UrlRegex(this.uri);
             }
 
-            public Builder enable(boolean enable) {
-                this.enable = enable;
+            public Builder enable(Boolean enable) {
+                // if null fallback to default value to avoid NullPoiterException
+                if (enable != null) this.enable = enable;
                 return this;
             }
 
             public Builder medias(MediaType... medias) {
-                this.medias = Arrays.asList(medias);
+                if (medias != null) this.medias = Arrays.asList(medias);
                 return this;
             }
 
             public Builder methods(Request.Method... methods) {
-                this.methods = Arrays.asList(methods);
+                if (methods != null) this.methods = Arrays.asList(methods);
                 return this;
             }
 

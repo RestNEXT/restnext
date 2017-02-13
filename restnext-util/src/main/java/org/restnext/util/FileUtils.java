@@ -16,39 +16,83 @@
 package org.restnext.util;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by thiago on 10/11/16.
  */
 public final class FileUtils {
 
+    public static final String DEFAULT_GLOB = "*";
+
     private FileUtils() {
         throw new AssertionError();
     }
 
-    public static Set<Path> listChildren(final Path directory, final String glob) {
+    public static Set<Path> listChildren(Path directory) {
+        return listChildren(directory, DEFAULT_GLOB);
+    }
+
+    public static Set<Path> listChildren(Path directory, String glob) {
         if (directory == null || !Files.isDirectory(directory)) return Collections.emptySet();
-        final String _glob = glob == null || glob.trim().isEmpty() ? "*" : glob;
-        final Set<Path> children = new HashSet<>();
-        try (DirectoryStream<Path> childrenStream = Files.newDirectoryStream(directory, _glob)) {
+        glob = (glob == null || glob.trim().isEmpty()) ? DEFAULT_GLOB : glob;
+        Set<Path> children = new HashSet<>();
+        try (DirectoryStream<Path> childrenStream = Files.newDirectoryStream(directory, glob)) {
             childrenStream.forEach(children::add);
-        } catch (IOException ignore) {}
-        return Collections.unmodifiableSet(new HashSet<>(children));
+            return Collections.unmodifiableSet(new HashSet<>(children));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static Path removeExtension(final Path path) {
-        return Optional.ofNullable(path).map(Path::toString)
-                .filter(strPath -> strPath.indexOf('.') > 0) // to avoid hidden files.
-                .map(strPath -> Paths.get(strPath.substring(0, strPath.lastIndexOf('.'))))
-                .orElse(path);
+    public static Set<Path> deepListChildren(Path directory) {
+        return deepListChildren(directory, DEFAULT_GLOB);
     }
 
+    public static Set<Path> deepListChildren(final Path directory, String glob) {
+        if (directory == null || !Files.isDirectory(directory)) return Collections.emptySet();
+        glob = (glob == null || glob.trim().isEmpty()) ? DEFAULT_GLOB : glob;
+        final PathMatcher pathMatcher = directory.getFileSystem().getPathMatcher("glob:" + glob);
+        BiPredicate<Path, BasicFileAttributes> filter = DEFAULT_GLOB.equals(glob.trim()) ?
+                (path, basicFileAttributes) -> {
+                    try {
+                        return !Files.isSameFile(directory, path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } :
+                (path, basicFileAttributes) -> /*basicFileAttributes.isRegularFile() &&*/ pathMatcher.matches(path.getFileName());
+        try {
+            Set<Path> children = Files.find(directory, Integer.MAX_VALUE, filter).collect(Collectors.toSet());
+            return Collections.unmodifiableSet(new HashSet<>(children));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Path removeExtension(Path file) {
+        Predicate<Path> filter = path -> {
+            try {
+                return !Files.isDirectory(path) && !Files.isHidden(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        Function<Path, Path> removeExtensionFunction = path -> {
+            String strPath = path.toString();
+            return Paths.get(strPath.substring(0, strPath.lastIndexOf('.')));
+        };
+
+        return Optional.ofNullable(file).filter(filter).map(removeExtensionFunction).orElse(file);
+    }
 }

@@ -38,31 +38,35 @@ public enum Security {
 
     INSTANCE;
 
-    private static final Logger log = LoggerFactory.getLogger(Security.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Security.class);
 
-    private final Map<String, Security.Mapping> registerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, Security.Mapping> registry = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public final void register(final Security.Mapping securityMapping) {
         Objects.requireNonNull(securityMapping, "Security mapping must not be null");
 
         final String uri = securityMapping.getUri();
-        final Security.Mapping securityMappingRegistered = registerMap.get(uri);
+        final Security.Mapping securityMappingRegistered = registry.get(uri);
 
         if (securityMappingRegistered == null || !securityMappingRegistered.isEnable()) {
-            registerMap.put(uri, securityMapping);
-            log.debug("the security uri '{}' was registered.", uri);
+            registry.put(uri, securityMapping);
+            LOGGER.debug("the security uri '{}' was registered.", uri);
         } else {
-            log.warn("the security uri '{}' is already registered.", uri);
+            LOGGER.warn("the security uri '{}' is already registered.", uri);
         }
     }
 
     public void unregister(final String uri) {
-        if (getSecurityMapping(uri) != null) registerMap.remove(uri);
+        if (getSecurityMapping(uri) != null) registry.remove(uri);
+    }
+
+    public void unregister(final Security.Mapping mapping) {
+        unregister(mapping.getUri());
     }
 
     public Security.Mapping getSecurityMapping(final String uri) {
-        for (Security.Mapping securityMapping : registerMap.values()) {
-            if (securityMapping != null && securityMapping.getUrlMatcher().matches(uri))
+        for (Security.Mapping securityMapping : registry.values()) {
+            if (securityMapping.getUrlMatcher().matches(uri))
                 return securityMapping;
         }
         return null;
@@ -80,7 +84,7 @@ public enum Security {
                 .orElse(true);
     }
 
-    // inner builder class
+    // inner mapping class
 
     public static final class Mapping {
 
@@ -132,21 +136,18 @@ public enum Security {
             // optional params - initialized to default values.
             private boolean enable = true;
 
-            public Builder(final String _uri, final Function<Request, Boolean> _provider) {
-                Objects.requireNonNull(_uri, "Uri must not be null");
-                Objects.requireNonNull(_provider, "Provider must not be null");
+            public Builder(final String uri, final Function<Request, Boolean> provider) {
+                Objects.requireNonNull(uri, "Uri must not be null");
+                Objects.requireNonNull(provider, "Provider must not be null");
 
-                this.uri = normalize(_uri);
-                this.provider = _provider;
-
-                if (isPathParamUri(this.uri))
-                    this.urlMatcher = new UrlPattern(this.uri);
-                else
-                    this.urlMatcher = new UrlRegex(this.uri);
+                this.uri = normalize(uri);
+                this.provider = provider;
+                this.urlMatcher = isPathParamUri(this.uri) ? new UrlPattern(this.uri) : new UrlRegex(this.uri);
             }
 
-            public Builder enable(boolean enable) {
-                this.enable = enable;
+            public Builder enable(Boolean enable) {
+                // if null fallback to default value to avoid NullPoiterException
+                if (enable != null) this.enable = enable;
                 return this;
             }
 
