@@ -50,14 +50,18 @@ public enum Security {
 
         if (securityMappingRegistered == null || !securityMappingRegistered.isEnable()) {
             registry.put(uri, securityMapping);
-            LOGGER.debug("the security uri '{}' was registered.", uri);
+            LOGGER.debug("The security uri '{}' was registered.", uri);
         } else {
-            LOGGER.warn("the security uri '{}' is already registered.", uri);
+            LOGGER.warn("The security uri '{}' is already registered.", uri);
         }
     }
 
     public void unregister(final String uri) {
-        if (getSecurityMapping(uri) != null) registry.remove(uri);
+        Objects.requireNonNull(uri, "Uri must not be null");
+        if (getSecurityMapping(uri) != null) {
+            registry.remove(uri);
+            LOGGER.debug("The security uri {} was unregistered", uri);
+        }
     }
 
     public void unregister(final Security.Mapping mapping) {

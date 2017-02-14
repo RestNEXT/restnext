@@ -53,11 +53,6 @@
                 <version>${javassist.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.fusesource.jansi</groupId>
-                <artifactId>jansi</artifactId>
-                <version>${jansi.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>pl.joegreen</groupId>
                 <artifactId>lambda-from-string</artifactId>
                 <version>${lambda-string.version}</version>
@@ -105,7 +100,6 @@
         <restnext.version>0.2.0-SNAPSHOT</restnext.version>
         <netty.version>4.1.8.Final</netty.version>
         <javassist.version>3.21.0-GA</javassist.version>
-        <jansi.version>1.14</jansi.version>
         <lambda-string.version>1.4</lambda-string.version>
         <slf4j.version>1.7.22</slf4j.version>
         <logback.version>1.1.10</logback.version>

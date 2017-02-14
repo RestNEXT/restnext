@@ -69,7 +69,7 @@ public final class RouteScanner {
         this.routeDirectory = routeDirectory;
         this.routesJaxb = new Jaxb("routes.xsd", Routes.class);
 
-        // start task for watching route dir for changes.
+        // start task for watching dir for changes.
         new Thread(new RouteWatcher(this), "route-dir-watcher").start();
     }
 
@@ -131,7 +131,6 @@ public final class RouteScanner {
             final Path routeDirectory = fs.getPath("/META-INF/route/");
             if (Files.exists(routeDirectory)) {
                 Set<Path> routeFiles = deepListChildren(routeDirectory, "*.xml");
-                // maps the jar filename with its security files
                 routeJarFilesMap.put(jar.getFileName(), readAll(routeFiles));
             }
         } catch (IOException e) {
@@ -141,11 +140,7 @@ public final class RouteScanner {
 
     private Map<Path, Set<Route.Mapping>> readAll(final Set<Path> routeFiles) {
         final Map<Path, Set<Route.Mapping>> routeFileMappings = new HashMap<>(routeFiles.size());
-        // iterates over the security file paths
-        for (Path routeFile : routeFiles) {
-            // maps the security file path with its security mappings
-            routeFileMappings.put(routeFile, read(routeFile));
-        }
+        routeFiles.forEach(r -> routeFileMappings.put(r, read(r)));
         return Collections.unmodifiableMap(new HashMap<>(routeFileMappings));
     }
 
@@ -155,7 +150,7 @@ public final class RouteScanner {
             // deserialize the input stream
             Routes routes = routesJaxb.unmarshal(is, Routes.class);
 
-            // iterates over the route entries
+            // iterates over the entries
             for (Routes.Route route : routes.getRoute()) {
                 String uri = route.getPath();
                 Boolean enable = route.getEnable();

@@ -67,7 +67,7 @@ public final class SecurityScanner {
         this.securityDirectory = securityDirectory;
         this.securityJaxb = new Jaxb("security.xsd", Securities.class);
 
-        // start task for watching security dir for changes.
+        // start task for watching dir for changes.
         new Thread(new SecurityWatcher(this), "security-dir-watcher").start();
     }
 
@@ -128,7 +128,6 @@ public final class SecurityScanner {
             final Path securityDirectory = fs.getPath("/META-INF/security/");
             if (Files.exists(securityDirectory)) {
                 Set<Path> securityFiles = deepListChildren(securityDirectory, "*.xml");
-                // maps the jar filename with its security files
                 securityJarFilesMap.put(jar.getFileName(), readAll(securityFiles));
             }
         } catch (IOException e) {
@@ -138,11 +137,7 @@ public final class SecurityScanner {
 
     private Map<Path, Set<Security.Mapping>> readAll(final Set<Path> securityFiles) {
         final Map<Path, Set<Security.Mapping>> securityFileMappings = new HashMap<>(securityFiles.size());
-        // iterates over the security file paths
-        for (Path securityFile : securityFiles) {
-            // maps the security file path with its security mappings
-            securityFileMappings.put(securityFile, read(securityFile));
-        }
+        securityFiles.forEach(s -> securityFileMappings.put(s, read(s)));
         return Collections.unmodifiableMap(new HashMap<>(securityFileMappings));
     }
 
@@ -152,7 +147,7 @@ public final class SecurityScanner {
             // deserialize the input stream
             Securities securities = securityJaxb.unmarshal(is, Securities.class);
 
-            // iterates over the security entries
+            // iterates over the entries
             for (Securities.Security security : securities.getSecurity()) {
                 String uri = security.getPath();
                 Boolean enable = security.getEnable();

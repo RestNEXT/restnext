@@ -49,14 +49,19 @@ public enum Route {
 
         if (routeMappingRegistered == null || !routeMappingRegistered.isEnable()) {
             registry.put(uri, routeMapping);
-            LOGGER.debug("the route uri '{}' was registered.", uri);
+            LOGGER.debug("The route uri '{}' was registered", uri);
         } else {
-            LOGGER.warn("the route uri '{}' is already registered.", uri);
+            LOGGER.warn("The route uri '{}' is already registered", uri);
         }
     }
 
     public void unregister(final String uri) {
-        if (getRouteMapping(uri) != null) registry.remove(uri);
+        Objects.requireNonNull(uri, "Uri must not be null");
+
+        if (getRouteMapping(uri) != null) {
+            registry.remove(uri);
+            LOGGER.debug("The route uri {} was unregistered", uri);
+        }
     }
 
     public void unregister(final Route.Mapping mapping) {

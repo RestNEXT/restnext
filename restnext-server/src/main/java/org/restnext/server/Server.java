@@ -24,11 +24,11 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.Future;
-import org.restnext.util.AnsiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
@@ -36,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Stream;
 
 /**
@@ -43,7 +44,7 @@ import java.util.stream.Stream;
  */
 public final class Server {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Server.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -60,7 +61,7 @@ public final class Server {
         Runtime.getRuntime().addShutdownHook(new Thread("server-hook") {
             @Override
             public void run() {
-                LOG.info("Running JVM shutdown hook to stop the server.");
+                LOGGER.info("Running JVM shutdown hook to stop the server.");
                 Server.this.stop();
             }
         });
@@ -68,7 +69,6 @@ public final class Server {
     }
 
     public void start() {
-        AnsiUtils.install();
         loadAndPrintBanner();
         try {
             boolean isSsl = serverInitializer.getSslCtx() != null;
@@ -79,13 +79,12 @@ public final class Server {
                     .childHandler(serverInitializer)
                     .bind(bindAddress)
                     .sync();
-            LOG.info("Application is running at - {}://{}", (isSsl ? "https" : "http"), bindAddress);
+            LOGGER.info("Application is running at - {}://{}", (isSsl ? "https" : "http"), bindAddress);
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e) {
             throw new ServerException("Could not start the server", e);
         } finally {
             stop();
-            AnsiUtils.uninstall();
         }
     }
 
@@ -143,7 +142,11 @@ public final class Server {
     private void printBanner(Path path) {
         if (path != null && Files.exists(path)) {
             try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
-                stream.forEach(line -> System.out.println(AnsiUtils.error(line)));
+                final Properties props = new Properties();
+                try (InputStream mavenProps = Server.class.getClassLoader().getResourceAsStream("META-INF/maven/org.restnext/restnext-server/pom.properties")) {
+                    props.load(mavenProps);
+                } catch (IOException ignore) {}
+                stream.map(s -> String.format(s, props.getProperty("version", ""))).forEach(LOGGER::info);
             } catch (IOException ignore) {}
         }
     }
