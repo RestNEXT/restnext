@@ -21,6 +21,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.internal.ThrowableUtil;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.codec.Message;
 import org.restnext.core.http.codec.Request;
@@ -28,7 +29,6 @@ import org.restnext.core.http.codec.Response;
 import org.restnext.core.http.url.UrlMatch;
 import org.restnext.route.Route;
 import org.restnext.security.Security;
-import org.restnext.util.ExceptionUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -114,7 +114,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                     .add("statusFamily: " + status.getFamily());
             if (cause.getMessage() != null) content.add("errorMessage: " + cause.getMessage());
             if (cause.getCause() != null) content.add("detailErrorMessage: " + cause.getCause().getMessage());
-            content.add("stackTraceMessage: " + ExceptionUtils.getStackTraceAsString(cause));
+            content.add("stackTraceMessage: " + ThrowableUtil.stackTraceToString(cause));
 
             // Build the response error.
             Response response = Response.status(status)

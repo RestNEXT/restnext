@@ -71,7 +71,6 @@ public final class Server {
     public void start() {
         loadAndPrintBanner();
         try {
-            boolean isSsl = serverInitializer.getSslCtx() != null;
             InetSocketAddress bindAddress = serverInitializer.getBindAddress();
             ServerBootstrap serverBootstrap = Epoll.isAvailable() ? newEpoolServerBootstrap() : newNioServerBootstrap();
             ChannelFuture channelFuture = serverBootstrap
@@ -79,7 +78,7 @@ public final class Server {
                     .childHandler(serverInitializer)
                     .bind(bindAddress)
                     .sync();
-            LOGGER.info("Application is running at - {}://{}", (isSsl ? "https" : "http"), bindAddress);
+            LOGGER.info("Application is running at - {}://{}", (serverInitializer.isSslConfigured() ? "https" : "http"), bindAddress);
             channelFuture.channel().closeFuture().sync();
         } catch (Exception e) {
             throw new ServerException("Could not start the server", e);

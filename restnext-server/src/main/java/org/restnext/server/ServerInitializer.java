@@ -48,11 +48,11 @@ import java.util.function.Function;
  */
 public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
+    private final Timeout timeout;
     private final SslContext sslCtx;
     private final CorsConfig corsConfig;
     private final int maxContentLength;
     private final InetSocketAddress bindAddress;
-    private final Timeout timeout;
 
     private static final ServerHandler SHARED_SERVER_HANDLER = new ServerHandler();
 
@@ -96,6 +96,12 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     public Timeout getTimeout() {
         return timeout;
+    }
+
+    // support methods
+
+    public boolean isSslConfigured() {
+        return getSslCtx() != null;
     }
 
     // static methods
@@ -203,7 +209,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
         public ServerInitializer build() {
             // register default health check route.
-            route("/healthcheck", request -> Response.ok().build());
+            route("/ping", request -> Response.ok("pong").build());
             return new ServerInitializer(this);
         }
 

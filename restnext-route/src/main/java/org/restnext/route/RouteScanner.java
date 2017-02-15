@@ -155,9 +155,9 @@ public final class RouteScanner {
                 String uri = route.getPath();
                 Boolean enable = route.getEnable();
                 // parse String http method list to Request.Method array.
-                Request.Method[] methods = route.getMethods().getMethod().stream().map(Request.Method::of).toArray(size -> new Request.Method[size]);
+                Request.Method[] methods = route.getMethods().getMethod().stream().map(Request.Method::of).toArray(Request.Method[]::new);
                 // parse String media type list to MediaType array.
-                MediaType[] medias = route.getMedias().getMedia().stream().map(MediaType::parse).toArray(size -> new MediaType[size]);
+                MediaType[] medias = route.getMedias().getMedia().stream().map(MediaType::parse).toArray(MediaType[]::new);
 
                 /*
                   https://github.com/greenjoe/lambdaFromString#code-examples:

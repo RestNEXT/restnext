@@ -82,7 +82,7 @@ When you enable route/security scanning, the default or custom directory path pr
     /META-INF/security/*.xml
 ```
 
-Each folder (route / security) can contain as many JSON files you want, and the name of the JSON file can be any name you want.
+Each folder (route / security) can contain as many XML files you want, and the name of the XML file can be any name you want.
 
 routes.xml example:
 
