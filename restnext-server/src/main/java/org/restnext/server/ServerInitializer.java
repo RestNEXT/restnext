@@ -54,8 +54,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     private final int maxContentLength;
     private final InetSocketAddress bindAddress;
 
-    private static final ServerHandler SHARED_SERVER_HANDLER = new ServerHandler();
-
     private ServerInitializer(final Builder builder) {
         this.sslCtx = builder.sslContext;
         this.corsConfig = builder.corsConfig;
@@ -73,7 +71,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast("streamer", new ChunkedWriteHandler());
         if (corsConfig != null) ch.pipeline().addLast("cors", new CorsHandler(corsConfig));
         if (timeout != null) pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
-        pipeline.addLast("handler", SHARED_SERVER_HANDLER);
+        pipeline.addLast("handler", ServerHandler.INSTANCE);
     }
 
     // getters methods

@@ -42,6 +42,10 @@ import static org.restnext.core.http.codec.Response.Status.*;
 @ChannelHandler.Sharable
 class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
+    public static final ServerHandler INSTANCE = new ServerHandler();
+
+    private ServerHandler() {}
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
         if (!req.decoderResult().isSuccess()) {
@@ -108,7 +112,8 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                     ((ServerException) cause).getResponseStatus() : INTERNAL_SERVER_ERROR;
 
             // Create the response error body.
-            StringJoiner content = new StringJoiner("\r\n")
+            String newLine = "\r\n";
+            StringJoiner content = new StringJoiner(newLine)
                     .add("statusCode: " + status.getStatusCode())
                     .add("statusMessage: " + status.getReasonPhrase())
                     .add("statusFamily: " + status.getFamily());

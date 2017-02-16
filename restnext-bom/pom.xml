@@ -101,8 +101,8 @@
         <netty.version>4.1.8.Final</netty.version>
         <javassist.version>3.21.0-GA</javassist.version>
         <lambda-string.version>1.4</lambda-string.version>
-        <slf4j.version>1.7.22</slf4j.version>
-        <logback.version>1.1.10</logback.version>
+        <slf4j.version>1.7.23</slf4j.version>
+        <logback.version>1.2.1</logback.version>
         <junit.version>4.12</junit.version>
     </properties>
 
