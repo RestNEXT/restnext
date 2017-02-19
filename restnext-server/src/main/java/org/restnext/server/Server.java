@@ -143,7 +143,7 @@ public final class Server {
             try (Stream<String> stream = Files.lines(path, StandardCharsets.UTF_8)) {
                 final Properties props = new Properties();
                 try (InputStream mavenProps = Server.class.getClassLoader().getResourceAsStream("META-INF/maven/org.restnext/restnext-server/pom.properties")) {
-                    props.load(mavenProps);
+                    if (mavenProps != null) props.load(mavenProps);
                 } catch (IOException ignore) {}
                 stream.map(s -> String.format(s, props.getProperty("version", ""))).forEach(LOGGER::info);
             } catch (IOException ignore) {}

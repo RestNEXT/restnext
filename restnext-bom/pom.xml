@@ -51,6 +51,7 @@
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
                 <version>${javassist.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>pl.joegreen</groupId>

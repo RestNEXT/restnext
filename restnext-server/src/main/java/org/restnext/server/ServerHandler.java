@@ -20,6 +20,9 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.util.CharsetUtil;
 import io.netty.util.internal.ThrowableUtil;
 import org.restnext.core.http.MediaType;
@@ -32,6 +35,7 @@ import org.restnext.security.Security;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 
 import static org.restnext.core.http.codec.Response.Status.*;
@@ -99,9 +103,19 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                 .orElseThrow(() -> new ServerException(String.format(
                         "Unsupported %s media type for the request uri %s", media, uri), UNSUPPORTED_MEDIA_TYPE));
 
+        final Response response = Optional.ofNullable(routeMapping.writeResponse(request))
+                .orElse(Response.noContent().version(version).build());
+
+        // Encode the cookie.
+        String cookieString = request.getHeader(HttpHeaderNames.COOKIE);
+        if (cookieString != null) {
+            Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieString);
+            // Reset the cookies if necessary.
+            cookies.forEach(cookie -> response.getHeaders().add(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie)));
+        }
+
         // Write the response for the request.
-        write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
-                .orElse(Response.noContent().version(version).build()), keepAlive);
+        write(ctx, response, keepAlive);
     }
 
     @Override
