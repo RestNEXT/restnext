@@ -45,8 +45,8 @@ final class RequestImpl implements Request {
     private final FullHttpRequest request;
     private final Version version;
     private final Method method;
-    private final String baseUri;
-    private final String uri;
+    private final URI baseUri;
+    private final URI uri;
     private byte[] content;
     private final boolean keepAlive;
     private final MultivaluedMap<String, String> headers;
@@ -55,17 +55,12 @@ final class RequestImpl implements Request {
     RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
         Objects.requireNonNull(request, "Request must not be null");
         Objects.requireNonNull(context, "Context must not be null");
-        this.request = request;
 
+        this.request = request;
         this.version = Version.of(request.protocolVersion());
         this.method = Method.of(request.method());
-
-        URI baseUri = getBaseUri(context, request);
-//        URI fullRequestUri = baseUri.resolve(request.uri());
-
-        this.uri = normalize(request.uri());
-        this.baseUri = baseUri.toString();
-
+        this.uri = URI.create(normalize(request.uri()));
+        this.baseUri = getBaseUri(context, request);
         this.keepAlive = HttpUtil.isKeepAlive(request);
 
         // copy the inbound netty request headers.
@@ -124,12 +119,12 @@ final class RequestImpl implements Request {
     }
 
     @Override
-    public String getBaseURI() {
+    public URI getBaseURI() {
         return baseUri;
     }
 
     @Override
-    public String getURI() {
+    public URI getURI() {
         return uri;
     }
 
@@ -272,20 +267,16 @@ final class RequestImpl implements Request {
     }
 
     private URI getBaseUri(ChannelHandlerContext ctx, FullHttpRequest req) {
-//        if (baseUri != null) {
-//            // Ensure that the base path ends with a '/'
-//            return baseUri.trim().endsWith("/") ? URI.create(baseUri) : URI.create(baseUri + "/");
-//        }
 //        final String reqUri = req.uri();
-        final String protocol = req.protocolVersion().protocolName().toLowerCase();
 //        final String basePath = reqUri.split("/")[reqUri.indexOf('/') + 1];
+        final String protocol = req.protocolVersion().protocolName().toLowerCase();
         String host = req.headers().get(HttpHeaderNames.HOST);
         if (host == null) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().localAddress();
             host = address.getHostName() + ":" + address.getPort();
         }
 //        return URI.create(String.format("%s://%s/%s/", protocol, host, basePath));
-        return URI.create(String.format("%s://%s", protocol, host));
+        return URI.create(String.format("%s://%s/", protocol, host));
     }
 
     private Response.Builder evaluateIfMatch(EntityTag eTag) {

@@ -80,9 +80,8 @@ public enum Security {
 
     public static boolean checkAuthorization(final Request request) {
         Objects.requireNonNull(request, "Request must not be null");
-        Objects.requireNonNull(request.getURI(), "Request uri must not be null");
 
-        return Optional.ofNullable(Security.INSTANCE.getSecurityMapping(request.getURI()))
+        return Optional.ofNullable(Security.INSTANCE.getSecurityMapping(request.getURI().toString()))
                 .filter(Security.Mapping::isEnable)
                 .map(securityMapping -> securityMapping.getSecurityProvider().apply(request))
                 .orElse(true);

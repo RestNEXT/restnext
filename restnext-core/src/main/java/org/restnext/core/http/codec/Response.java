@@ -175,6 +175,10 @@ public interface Response extends Message, Headers {
 
         Response.Builder content(byte[] content);
 
+        Response.Builder content(String content);
+
+        Response.Builder content(String content, Charset charset);
+
         Response.Builder allow(Request.Method... methods);
 
         Response.Builder allow(Set<Request.Method> methods);

@@ -22,6 +22,7 @@ import org.restnext.core.http.EntityTag;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.MultivaluedMap;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,9 +31,9 @@ public interface Request extends Message, Headers {
 
     FullHttpRequest getFullHttpRequest();
 
-    String getBaseURI();
+    URI getBaseURI();
 
-    String getURI();
+    URI getURI();
 
     Method getMethod();
 

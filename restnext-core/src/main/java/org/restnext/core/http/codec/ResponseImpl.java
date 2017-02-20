@@ -22,12 +22,14 @@ import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.AsciiString;
+import io.netty.util.CharsetUtil;
 import org.restnext.core.http.EntityTag;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.MultivaluedHashMap;
 import org.restnext.core.http.MultivaluedMap;
 
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -156,7 +158,7 @@ final class ResponseImpl implements Response {
                     this.status.getNettyStatus(),
                     this.content == null
                             ? Unpooled.EMPTY_BUFFER
-                            : Unpooled.copiedBuffer(this.content));
+                            : Unpooled.wrappedBuffer(this.content));
 
             // Set my mandatory Date header, if necessary.
             if (this.headers.get(DATE) == null) date(new Date());
@@ -187,6 +189,16 @@ final class ResponseImpl implements Response {
         public Response.Builder content(byte[] content) {
             this.content = content;
             return this;
+        }
+
+        @Override
+        public Response.Builder content(String content) {
+            return content(content, CharsetUtil.UTF_8);
+        }
+
+        @Override
+        public Response.Builder content(String content, Charset charset) {
+            return content(content.getBytes(charset));
         }
 
         @Override

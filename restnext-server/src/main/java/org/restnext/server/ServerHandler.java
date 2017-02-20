@@ -20,22 +20,17 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
-import io.netty.util.CharsetUtil;
 import io.netty.util.internal.ThrowableUtil;
 import org.restnext.core.http.MediaType;
-import org.restnext.core.http.codec.Message;
 import org.restnext.core.http.codec.Request;
 import org.restnext.core.http.codec.Response;
 import org.restnext.core.http.url.UrlMatch;
 import org.restnext.route.Route;
 import org.restnext.security.Security;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.StringJoiner;
 
 import static org.restnext.core.http.codec.Response.Status.*;
@@ -48,7 +43,9 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     public static final ServerHandler INSTANCE = new ServerHandler();
 
-    private ServerHandler() {}
+    private ServerHandler() {
+
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
@@ -61,19 +58,19 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             ctx.write(new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.CONTINUE));
         }
 
-        // Decode fullHttpRequest to Request object.
-        final Request request = Request.fromRequest(ctx, req);
-        final String uri = request.getURI();
-        final MediaType media = request.getMediaType();
-        final boolean keepAlive = request.isKeepAlive();
-        final Request.Method method = request.getMethod();
-        final Message.Version version = request.getVersion();
+        // Create Request from FullHttpRequest
+        Request request = Request.fromRequest(ctx, req);
+        String uri = request.getURI().toString();
+        URI baseURI = request.getBaseURI();
+        URI fullRequestURI = baseURI.resolve(uri);
+        MediaType media = request.getMediaType();
+        Request.Method method = request.getMethod();
 
         // Check security constraint for the request,
         // otherwise return 401 - Unauthorized  response.
         if (!Security.checkAuthorization(request)) {
             throw new ServerException(String.format(
-                    "Access denied for the uri %s", uri), UNAUTHORIZED);
+                    "Access denied for the uri %s", fullRequestURI), UNAUTHORIZED);
         }
 
         // Get registered route mapping for the request uri, otherwise return 404 - Not Found  response.
@@ -81,7 +78,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
                 .filter(Route.Mapping::isEnable)
                 .filter(_routeMapping -> _routeMapping.getRouteProvider() != null)
                 .orElseThrow(() -> new ServerException(String.format(
-                        "Route mapping not found for the method %s and uri %s", method, uri), NOT_FOUND));
+                        "Route mapping not found for the method %s and uri %s", method, fullRequestURI), NOT_FOUND));
 
         // Parse the uri parameters and add it to request parameters map.
         UrlMatch urlMatch = routeMapping.getUrlMatcher().match(uri);
@@ -94,28 +91,18 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
         Optional.ofNullable(routeMapping.getMethods())
                 .filter(methods -> methods.contains(method) || methods.isEmpty())
                 .orElseThrow(() -> new ServerException(String.format(
-                        "Method %s not allowed for the request uri %s", method, uri), METHOD_NOT_ALLOWED));
+                        "Method %s not allowed for the request uri %s", method, fullRequestURI), METHOD_NOT_ALLOWED));
 
         // Check if the registered route mapping medias contains the request media,
         // otherwise return 415 Unsupported Media Type response.
         Optional.ofNullable(routeMapping.getMedias())
                 .filter(medias -> medias.contains(media) || medias.isEmpty() || media == null)
                 .orElseThrow(() -> new ServerException(String.format(
-                        "Unsupported %s media type for the request uri %s", media, uri), UNSUPPORTED_MEDIA_TYPE));
-
-        final Response response = Optional.ofNullable(routeMapping.writeResponse(request))
-                .orElse(Response.noContent().version(version).build());
-
-        // Encode the cookie.
-        String cookieString = request.getHeader(HttpHeaderNames.COOKIE);
-        if (cookieString != null) {
-            Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieString);
-            // Reset the cookies if necessary.
-            cookies.forEach(cookie -> response.getHeaders().add(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie)));
-        }
+                        "Unsupported %s media type for the request uri %s", media, fullRequestURI), UNSUPPORTED_MEDIA_TYPE));
 
         // Write the response for the request.
-        write(ctx, response, keepAlive);
+        write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
+                .orElse(Response.noContent().build()), request.isKeepAlive());
     }
 
     @Override
@@ -135,20 +122,22 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             if (cause.getCause() != null) content.add("detailErrorMessage: " + cause.getCause().getMessage());
             content.add("stackTraceMessage: " + ThrowableUtil.stackTraceToString(cause));
 
-            // Build the response error.
-            Response response = Response.status(status)
-                    .content(content.toString().getBytes(CharsetUtil.UTF_8))
-                    .type(MediaType.TEXT_UTF8)
-                    .build();
-
             // Write the response error.
-            write(ctx, response, false);
+            write(ctx, Response.status(status)
+                            .content(content.toString())
+                            .type(MediaType.TEXT_UTF8)
+                            .build(),
+                    false);
         }
         ctx.close();
     }
 
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        ctx.flush();
+    }
+
     private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
-        // Get the response as FullHttpResponse object.
         FullHttpResponse resp = response.getFullHttpResponse();
 
         // Check and set keep alive header to decide
@@ -157,11 +146,11 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
         if (keepAlive) {
             HttpUtil.setContentLength(resp, resp.content().readableBytes());
-            // Write the response.
-            ctx.writeAndFlush(resp);
+            ctx.write(resp);
         } else {
             // Close the connection after the write operation is done if necessary.
             ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
         }
     }
+
 }
