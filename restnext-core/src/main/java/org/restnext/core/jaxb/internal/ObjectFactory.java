@@ -30,19 +30,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Securities }
-     * 
-     */
-    public Securities createSecurities() {
-        return new Securities();
-    }
-
-    /**
      * Create an instance of {@link Routes }
      * 
      */
     public Routes createRoutes() {
         return new Routes();
+    }
+
+    /**
+     * Create an instance of {@link Securities }
+     * 
+     */
+    public Securities createSecurities() {
+        return new Securities();
     }
 
     /**
