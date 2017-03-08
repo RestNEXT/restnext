@@ -30,6 +30,7 @@
 /*
  * Created on Oct 6, 2004
  */
+
 package org.restnext.core.classpath;
 
 import java.lang.reflect.Method;
@@ -44,48 +45,48 @@ import java.nio.file.Paths;
  */
 public class ClasspathRegister {
 
-    /**
-     * Parameters of the method to add an URL to the System classes.
-     */
-    private static final Class<?>[] parameters = new Class[]{URL.class};
+  /**
+   * Parameters of the method to add an URL to the System classes.
+   */
+  private static final Class<?>[] parameters = new Class[]{URL.class};
 
-    /**
-     * Adds a file to the classpath.
-     *
-     * @param s a String pointing to the file
-     */
-    public static void addPath(String s) {
-        addPath(Paths.get(s));
-    }
+  /**
+   * Adds a file to the classpath.
+   *
+   * @param s a String pointing to the file
+   */
+  public static void addPath(String s) {
+    addPath(Paths.get(s));
+  }
 
-    /**
-     * Adds a file to the classpath
-     *
-     * @param path the file to be added
-     */
-    public static void addPath(Path path) {
-        try {
-            addURL(path.toUri().toURL());
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error, could not get path URL", e);
-        }
+  /**
+   * Adds a file to the classpath.
+   *
+   * @param path the file to be added
+   */
+  public static void addPath(Path path) {
+    try {
+      addUrl(path.toUri().toURL());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException("Error, could not get path URL", e);
     }
+  }
 
-    /**
-     * Adds the content pointed by the URL to the classpath.
-     *
-     * @param u the URL pointing to the content to be added
-     * @throws RuntimeException if something goes wrong
-     */
-    public static void addURL(URL u) {
-        URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class<?> sysclass = URLClassLoader.class;
-        try {
-            Method method = sysclass.getDeclaredMethod("addURL", parameters);
-            method.setAccessible(true);
-            method.invoke(sysloader, u);
-        } catch (Throwable t) {
-            throw new RuntimeException("Error, could not add URL to system classloader", t);
-        }
+  /**
+   * Adds the content pointed by the URL to the classpath.
+   *
+   * @param u the URL pointing to the content to be added
+   * @throws RuntimeException if something goes wrong
+   */
+  public static void addUrl(URL u) {
+    URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+    Class<?> sysclass = URLClassLoader.class;
+    try {
+      Method method = sysclass.getDeclaredMethod("addURL", parameters);
+      method.setAccessible(true);
+      method.invoke(sysloader, u);
+    } catch (Throwable t) {
+      throw new RuntimeException("Error, could not add URL to system classloader", t);
     }
+  }
 }

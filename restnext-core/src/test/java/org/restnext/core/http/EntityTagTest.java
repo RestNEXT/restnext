@@ -13,54 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.core.http;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
-
 /**
- *  Created by thiago on 10/24/16.
+ * Created by thiago on 10/24/16.
  */
 public class EntityTagTest {
 
-    @Test
-    public void toStringWeakTest() {
-        assertEquals(new EntityTag("Hello \"World\"", true).toString(), "W/\"Hello \\\"World\\\"\"");
-    }
+  @Test
+  public void toStringWeakTest() {
+    assertEquals(new EntityTag(
+        "Hello \"World\"", true).toString(),
+        "W/\"Hello \\\"World\\\"\"");
+  }
 
-    @Test
-    public void toStringStrongTest() {
-        assertEquals(new EntityTag("Hello \"World\"").toString(), "\"Hello \\\"World\\\"\"");
-    }
+  @Test
+  public void toStringStrongTest() {
+    assertEquals(new EntityTag(
+        "Hello \"World\"").toString(),
+        "\"Hello \\\"World\\\"\"");
+  }
 
-    @Test
-    public void fromStringWeakTest() throws Exception {
-        assertEquals(EntityTag.fromString("W/\"Hello \\\"World\\\"\""), new EntityTag("Hello \"World\"", true));
-    }
+  @Test
+  public void fromStringWeakTest() throws Exception {
+    assertEquals(EntityTag.fromString(
+        "W/\"Hello \\\"World\\\"\""),
+        new EntityTag("Hello \"World\"", true));
+  }
 
-    @Test
-    public void fromStringStrongTest() throws Exception {
-        assertEquals(EntityTag.fromString("\"Hello \\\"World\\\"\""), new EntityTag("Hello \"World\""));
-    }
+  @Test
+  public void fromStringStrongTest() throws Exception {
+    assertEquals(EntityTag.fromString(
+        "\"Hello \\\"World\\\"\""),
+        new EntityTag("Hello \"World\""));
+  }
 
-    @Test
-    public void anyMatchTest() throws Exception {
-        assertEquals(new EntityTag("*").toString(), "\"*\"");
-        assertEquals(new EntityTag("*"), EntityTag.ANY_MATCH);
-        assertEquals(new EntityTag("*"), EntityTag.fromString("*"));
-        assertThat(EntityTag.ANY_MATCH, is(new EntityTag("*")));
-    }
+  @Test
+  public void anyMatchTest() throws Exception {
+    assertEquals(new EntityTag("*").toString(), "\"*\"");
+    assertEquals(new EntityTag("*"), EntityTag.ANY_MATCH);
+    assertEquals(new EntityTag("*"), EntityTag.fromString("*"));
+    assertThat(EntityTag.ANY_MATCH, is(new EntityTag("*")));
+  }
 
-    @Test
-    public void badEntityTagTest() {
-        String header = "1\"";
-        try {
-            EntityTag.fromString(header);
-            fail("RuntimeException expected");
-        } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString(header));
-        }
+  @Test
+  public void badEntityTagTest() {
+    String header = "1\"";
+    try {
+      EntityTag.fromString(header);
+      fail("RuntimeException expected");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), containsString(header));
     }
+  }
 }

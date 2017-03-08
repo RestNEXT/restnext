@@ -13,61 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.server;
 
-import org.restnext.core.http.codec.Response;
-
 import java.util.Optional;
+
+import org.restnext.core.http.codec.Response;
 
 /**
  * Created by thiago on 04/08/16.
  */
 public class ServerException extends RuntimeException {
 
-    private static final long serialVersionUID = 9222578952610045310L;
+  private static final long serialVersionUID = 9222578952610045310L;
 
-    private final Response.Status responseStatus;
+  private final Response.Status responseStatus;
 
-    public ServerException() {
-        this((Throwable) null, Response.Status.INTERNAL_SERVER_ERROR);
-    }
+  public ServerException() {
+    this((Throwable) null, Response.Status.INTERNAL_SERVER_ERROR);
+  }
 
-    public ServerException(String message) {
-        this(message, null, Response.Status.INTERNAL_SERVER_ERROR);
-    }
+  public ServerException(Throwable cause, Response.Status status) {
+    this(computeExceptionMessage(status), cause, status);
+  }
 
-    public ServerException(Throwable cause) {
-        this(computeExceptionMessage(Response.Status.INTERNAL_SERVER_ERROR), cause, Response.Status.INTERNAL_SERVER_ERROR);
-    }
+  public ServerException(String message, Throwable cause, Response.Status status) {
+    super(message, cause);
+    this.responseStatus = Optional.ofNullable(status).orElse(Response.Status.INTERNAL_SERVER_ERROR);
+  }
 
-    public ServerException(Response.Status status) {
-        this((Throwable) null, status);
-    }
+  private static String computeExceptionMessage(Response.Status status) {
+    Response.Status statusInfo = Optional.ofNullable(status)
+        .orElse(Response.Status.INTERNAL_SERVER_ERROR);
+    return "HTTP " + statusInfo.getStatusCode() + ' ' + statusInfo.getReasonPhrase()
+        + ' ' + statusInfo.getFamily();
+  }
 
-    public ServerException(String message, Throwable cause) {
-        this(message, cause, Response.Status.INTERNAL_SERVER_ERROR);
-    }
+  public ServerException(String message) {
+    this(message, null, Response.Status.INTERNAL_SERVER_ERROR);
+  }
 
-    public ServerException(String message, Response.Status status) {
-        this(message, null, status);
-    }
+  public ServerException(Throwable cause) {
+    this(computeExceptionMessage(Response.Status.INTERNAL_SERVER_ERROR), cause,
+        Response.Status.INTERNAL_SERVER_ERROR);
+  }
 
-    public ServerException(Throwable cause, Response.Status status) {
-        this(computeExceptionMessage(status), cause, status);
-    }
+  public ServerException(Response.Status status) {
+    this((Throwable) null, status);
+  }
 
-    public ServerException(String message, Throwable cause, Response.Status status) {
-        super(message, cause);
-        this.responseStatus = Optional.ofNullable(status).orElse(Response.Status.INTERNAL_SERVER_ERROR);
-    }
+  public ServerException(String message, Throwable cause) {
+    this(message, cause, Response.Status.INTERNAL_SERVER_ERROR);
+  }
 
-    private static String computeExceptionMessage(Response.Status status) {
-        Response.Status statusInfo = Optional.ofNullable(status).orElse(Response.Status.INTERNAL_SERVER_ERROR);
-        return "HTTP " + statusInfo.getStatusCode() + ' ' + statusInfo.getReasonPhrase() + ' ' + statusInfo.getFamily();
-    }
+  public ServerException(String message, Response.Status status) {
+    this(message, null, status);
+  }
 
-    public Response.Status getResponseStatus() {
-        return responseStatus;
-    }
+  public Response.Status getResponseStatus() {
+    return responseStatus;
+  }
 
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.core.http.codec;
 
 import io.netty.handler.codec.http.HttpVersion;
@@ -25,44 +26,46 @@ import java.util.Map;
  */
 public interface Message {
 
-    Version getVersion();
+  Version getVersion();
 
-    //============================
-    //        HTTP VERSION
-    //============================
+  //============================
+  //        HTTP VERSION
+  //============================
 
-    enum Version {
+  enum Version {
 
-        HTTP_1_0(HttpVersion.HTTP_1_0),
-        HTTP_1_1(HttpVersion.HTTP_1_1);
+    HTTP_1_0(HttpVersion.HTTP_1_0),
+    HTTP_1_1(HttpVersion.HTTP_1_1);
 
-        private static class Holder {
-            static Map<HttpVersion, Version> MAP = new HashMap<>();
-        }
+    private final HttpVersion nettyVersion;
 
-        private final HttpVersion nettyVersion;
-
-        Version(HttpVersion nettyVersion) {
-            this.nettyVersion = nettyVersion;
-            Holder.MAP.put(nettyVersion, this);
-        }
-
-        public HttpVersion getNettyVersion() {
-            return nettyVersion;
-        }
-
-        @Override
-        public String toString() {
-            return name();
-        }
-
-        public static Version of(HttpVersion version) {
-            return of(version, null);
-        }
-
-        public static Version of(HttpVersion version, Version def) {
-            if (version == null) return null;
-            return Holder.MAP.getOrDefault(version, def);
-        }
+    Version(HttpVersion nettyVersion) {
+      this.nettyVersion = nettyVersion;
+      Holder.MAP.put(nettyVersion, this);
     }
+
+    public static Version of(HttpVersion version) {
+      return of(version, null);
+    }
+
+    public static Version of(HttpVersion version, Version def) {
+      if (version == null) {
+        return null;
+      }
+      return Holder.MAP.getOrDefault(version, def);
+    }
+
+    public HttpVersion getNettyVersion() {
+      return nettyVersion;
+    }
+
+    @Override
+    public String toString() {
+      return name();
+    }
+
+    private static class Holder {
+      static Map<HttpVersion, Version> MAP = new HashMap<>();
+    }
+  }
 }

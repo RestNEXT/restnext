@@ -37,83 +37,84 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.restnext.core.http;
 
-import org.junit.Test;
+package org.restnext.core.http;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
+
 public class MultivaluedMapTest {
 
-//    @Before
-//    public void setUp() throws Exception {
-//        RuntimeDelegate.setInstance(new RuntimeDelegateStub());
-//    }
-//
-//    @After
-//    public void tearDown() throws Exception {
-//        RuntimeDelegate.setInstance(null);
-//    }
+  //@Before
+  //public void setUp() throws Exception {
+  //    RuntimeDelegate.setInstance(new RuntimeDelegateStub());
+  //}
 
-    @Test
-    public void testEqualsIgnoreOrder() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        mvm1.addAll("foo1", "bar1", "bar2");
-        mvm1.addAll("foo2", "baz1", "baz2");
-        MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
-        mvm2.addAll("foo1", "bar2", "bar1");
-        mvm2.addAll("foo2", "baz2", "baz1");
-        assertTrue(mvm1.equalsIgnoreValueOrder(mvm2));
-        assertTrue(mvm2.equalsIgnoreValueOrder(mvm1));
-    }
+  //@After
+  //public void tearDown() throws Exception {
+  //    RuntimeDelegate.setInstance(null);
+  //}
 
-    @Test
-    public void testEqualsIgnoreOrderInclusion() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        mvm1.addAll("foo1", "bar1", "bar2");
-        MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
-        mvm2.addAll("foo1", "bar2", "bar1");
-        mvm2.addAll("foo2", "baz2", "baz1");
-        assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
-        assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
-    }
+  @Test
+  public void testEqualsIgnoreOrder() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    mvm1.addAll("foo1", "bar1", "bar2");
+    mvm1.addAll("foo2", "baz1", "baz2");
+    MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
+    mvm2.addAll("foo1", "bar2", "bar1");
+    mvm2.addAll("foo2", "baz2", "baz1");
+    assertTrue(mvm1.equalsIgnoreValueOrder(mvm2));
+    assertTrue(mvm2.equalsIgnoreValueOrder(mvm1));
+  }
 
-    @Test
-    public void testEqualsIgnoreListSize() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        mvm1.addAll("foo1", "bar1", "bar2");
-        MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
-        mvm2.addAll("foo1", "bar2", "bar1", "bar3");
-        assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
-        assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
-    }
+  @Test
+  public void testEqualsIgnoreOrderInclusion() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    mvm1.addAll("foo1", "bar1", "bar2");
+    MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
+    mvm2.addAll("foo1", "bar2", "bar1");
+    mvm2.addAll("foo2", "baz2", "baz1");
+    assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
+    assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
+  }
 
-    @Test
-    public void testEqualsEmpty() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
-        assertTrue(mvm1.equals(mvm2));
-        assertTrue(mvm2.equals(mvm1));
-        assertTrue(mvm1.equalsIgnoreValueOrder(mvm2));
-        assertTrue(mvm2.equalsIgnoreValueOrder(mvm1));
-    }
+  @Test
+  public void testEqualsIgnoreListSize() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    mvm1.addAll("foo1", "bar1", "bar2");
+    MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
+    mvm2.addAll("foo1", "bar2", "bar1", "bar3");
+    assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
+    assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
+  }
 
-    @SuppressWarnings({"CollectionAddedToSelf", "EqualsWithItself"})
-    @Test
-    public void testEqualsSame() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        assertTrue(mvm1.equals(mvm1));
-        assertTrue(mvm1.equalsIgnoreValueOrder(mvm1));
-    }
+  @Test
+  public void testEqualsEmpty() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
+    assertTrue(mvm1.equals(mvm2));
+    assertTrue(mvm2.equals(mvm1));
+    assertTrue(mvm1.equalsIgnoreValueOrder(mvm2));
+    assertTrue(mvm2.equalsIgnoreValueOrder(mvm1));
+  }
 
-    @Test
-    public void testEqualsWithDuplicates() {
-        MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
-        mvm1.addAll("foo1", "bar1", "bar2", "bar1");
-        MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
-        mvm2.addAll("foo1", "bar2", "bar1");
-        assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
-        assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
-    }
+  @SuppressWarnings({"CollectionAddedToSelf", "EqualsWithItself"})
+  @Test
+  public void testEqualsSame() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    assertTrue(mvm1.equals(mvm1));
+    assertTrue(mvm1.equalsIgnoreValueOrder(mvm1));
+  }
+
+  @Test
+  public void testEqualsWithDuplicates() {
+    MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();
+    mvm1.addAll("foo1", "bar1", "bar2", "bar1");
+    MultivaluedHashMap<String, String> mvm2 = new MultivaluedHashMap<>();
+    mvm2.addAll("foo1", "bar2", "bar1");
+    assertFalse(mvm1.equalsIgnoreValueOrder(mvm2));
+    assertFalse(mvm2.equalsIgnoreValueOrder(mvm1));
+  }
 }

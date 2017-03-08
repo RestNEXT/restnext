@@ -1,92 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.restnext</groupId>
-        <artifactId>restnext</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.restnext</groupId>
+    <artifactId>restnext</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>restnext-core</artifactId>
+  <artifactId>restnext-core</artifactId>
 
-    <name>${project.artifactId}</name>
-    <description>RestNext Core</description>
+  <name>${project.artifactId}</name>
+  <description>RestNext Core</description>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-bom</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.jvnet.jaxb2.maven2</groupId>
-                <artifactId>maven-jaxb2-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>schemas</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <schemaDirectory>${project.basedir}/src/main/resources</schemaDirectory>
-                    <schemaIncludes>
-                        <include>*.xsd</include>
-                    </schemaIncludes>
-                    <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
-                    <generatePackage>org.restnext.core.jaxb.internal</generatePackage>
-                    <cleanPackageDirectories>true</cleanPackageDirectories>
-                    <noFileHeader>true</noFileHeader>
-                    <enableIntrospection>true</enableIntrospection>
-                    <markGenerated>false</markGenerated>
-                    <packageLevelAnnotations>false</packageLevelAnnotations>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                    <specVersion>2.2</specVersion>
-                    <args>
-                        <!--<arg>-no-header</arg>-->
-                        <!--<arg>-enableIntrospection</arg>-->
-                        <arg>-npa</arg>
-                    </args>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
+  <dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.restnext</groupId>
-            <artifactId>restnext-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jvnet.jaxb2.maven2</groupId>
+        <artifactId>maven-jaxb2-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>schemas</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <schemaDirectory>${project.basedir}/src/main/resources</schemaDirectory>
+          <schemaIncludes>
+            <include>*.xsd</include>
+          </schemaIncludes>
+          <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+          <generatePackage>org.restnext.core.jaxb.internal</generatePackage>
+          <cleanPackageDirectories>true</cleanPackageDirectories>
+          <episodeFile>${project.basedir}/src/main/resources/META-INF/sun-jaxb.episode</episodeFile>
+          <noFileHeader>true</noFileHeader>
+          <enableIntrospection>true</enableIntrospection>
+          <markGenerated>false</markGenerated>
+          <packageLevelAnnotations>false</packageLevelAnnotations>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <specVersion>2.2</specVersion>
+          <args>
+            <!--<arg>-no-header</arg>-->
+            <!--<arg>-enableIntrospection</arg>-->
+            <arg>-npa</arg>
+          </args>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.restnext</groupId>
+      <artifactId>restnext-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.javassist</groupId>
+      <artifactId>javassist</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

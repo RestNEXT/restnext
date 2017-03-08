@@ -1,110 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
+  <parent>
+    <groupId>org.restnext</groupId>
+    <artifactId>restnext</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>restnext-bom</artifactId>
+
+  <name>${project.artifactId}</name>
+  <description>
+    RestNext Bill of Materials to make sure a consistent set of versions is used for the modules.
+  </description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
         <groupId>org.restnext</groupId>
-        <artifactId>restnext</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
-    </parent>
+        <artifactId>restnext-security</artifactId>
+        <version>${restnext.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-util</artifactId>
+        <version>${restnext.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-core</artifactId>
+        <version>${restnext.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-server</artifactId>
+        <version>${restnext.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-route</artifactId>
+        <version>${restnext.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.javassist</groupId>
+        <artifactId>javassist</artifactId>
+        <version>${javassist.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>pl.joegreen</groupId>
+        <artifactId>lambda-from-string</artifactId>
+        <version>${lambda-string.version}</version>
+        <!--
+            It has only one external Maven dependency: Eclipse JDT Core Batch Compiler.
+            That dependency was added because Java compiler is a part of JDK (located in tools.jar)
+            and it's not available in pure JRE. When client applications were running on JRE then no Java
+            compiler was available at runtime and the LambdaFromString library failed to compile lambda code.
+            Eclipse ECJ makes it possible to use LambdaFromString even in cases when only JRE is available at runtime.
+        -->
+        <exclusions>
+          <exclusion>
+            <groupId>org.eclipse.jdt.core.compiler</groupId>
+            <artifactId>ecj</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+        <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
-    <artifactId>restnext-bom</artifactId>
-
-    <name>${project.artifactId}</name>
-    <description>
-        RestNext Bill of Materials to make sure a consistent set of versions is used for the modules.
-    </description>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-security</artifactId>
-                <version>${restnext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-util</artifactId>
-                <version>${restnext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-core</artifactId>
-                <version>${restnext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-server</artifactId>
-                <version>${restnext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-route</artifactId>
-                <version>${restnext.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.javassist</groupId>
-                <artifactId>javassist</artifactId>
-                <version>${javassist.version}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>pl.joegreen</groupId>
-                <artifactId>lambda-from-string</artifactId>
-                <version>${lambda-string.version}</version>
-                <!--
-                    It has only one external Maven dependency: Eclipse JDT Core Batch Compiler.
-                    That dependency was added because Java compiler is a part of JDK (located in tools.jar)
-                    and it's not available in pure JRE. When client applications were running on JRE then no Java
-                    compiler was available at runtime and the LambdaFromString library failed to compile lambda code.
-                    Eclipse ECJ makes it possible to use LambdaFromString even in cases when only JRE is available at runtime.
-                -->
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jdt.core.compiler</groupId>
-                        <artifactId>ecj</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-                <scope>provided</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <properties>
-        <restnext.version>0.2.1-SNAPSHOT</restnext.version>
-        <netty.version>4.1.8.Final</netty.version>
-        <javassist.version>3.21.0-GA</javassist.version>
-        <lambda-string.version>1.4</lambda-string.version>
-        <slf4j.version>1.7.24</slf4j.version>
-        <logback.version>1.2.1</logback.version>
-        <junit.version>4.12</junit.version>
-    </properties>
+  <properties>
+    <restnext.version>0.2.1-SNAPSHOT</restnext.version>
+    <netty.version>4.1.8.Final</netty.version>
+    <javassist.version>3.21.0-GA</javassist.version>
+    <lambda-string.version>1.4</lambda-string.version>
+    <slf4j.version>1.7.24</slf4j.version>
+    <logback.version>1.2.1</logback.version>
+    <junit.version>4.12</junit.version>
+  </properties>
 
 </project>

@@ -13,48 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.core.http.codec;
 
 import io.netty.util.AsciiString;
-import org.restnext.core.http.MultivaluedMap;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.restnext.core.http.MultivaluedMap;
 
 /**
  * Created by thiago on 06/09/16.
  */
 interface Headers {
 
-    MultivaluedMap<String, String> getHeaders();
+  default String getHeader(AsciiString name) {
+    return getHeader(name.toString());
+  }
 
-    default String getHeader(AsciiString name) {
-        return getHeader(name.toString());
+  default String getHeader(String name) {
+    List<String> values = getAllHeader(name);
+    if (values == null) {
+      return null;
     }
-
-    default String getHeader(String name) {
-        List<String> values = getAllHeader(name);
-        if (values == null) return null;
-        if (values.isEmpty()) return "";
-        return values.stream()
-//                .filter(v -> v != null && !v.isEmpty())
-//                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-
-//        final Iterator<String> valuesIterator = values.iterator();
-//        StringBuilder buffer = new StringBuilder(valuesIterator.next());
-//        while (valuesIterator.hasNext()) {
-//            buffer.append(',').append(valuesIterator.next());
-//        }
-//        return buffer.toString();
+    if (values.isEmpty()) {
+      return "";
     }
+    return values.stream()
+        //.filter(v -> v != null && !v.isEmpty())
+        //.map(String::valueOf)
+        .collect(Collectors.joining(","));
 
-    default List<String> getAllHeader(AsciiString name) {
-        return getAllHeader(name.toString());
-    }
+//    final Iterator<String> valuesIterator = values.iterator();
+//    StringBuilder buffer = new StringBuilder(valuesIterator.next());
+//    while (valuesIterator.hasNext()) {
+//        buffer.append(',').append(valuesIterator.next());
+//    }
+//    return buffer.toString();
+  }
 
-    default List<String> getAllHeader(String name) {
-        return getHeaders().get(name);
-    }
+  MultivaluedMap<String, String> getHeaders();
 
+  default List<String> getAllHeader(AsciiString name) {
+    return getAllHeader(name.toString());
+  }
+
+  default List<String> getAllHeader(String name) {
+    return getHeaders().get(name);
+  }
 }

@@ -1,39 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.restnext</groupId>
-        <artifactId>restnext</artifactId>
-        <version>0.2.1-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.restnext</groupId>
+    <artifactId>restnext</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>restnext-server</artifactId>
+  <artifactId>restnext-server</artifactId>
 
-    <name>${project.artifactId}</name>
-    <description>RestNext Server</description>
+  <name>${project.artifactId}</name>
+  <description>RestNext Server</description>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.restnext</groupId>
-                <artifactId>restnext-bom</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
+  <dependencyManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.restnext</groupId>
-            <artifactId>restnext-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.restnext</groupId>
-            <artifactId>restnext-route</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>org.restnext</groupId>
+        <artifactId>restnext-bom</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.restnext</groupId>
+      <artifactId>restnext-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.restnext</groupId>
+      <artifactId>restnext-route</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

@@ -37,11 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.restnext.core.http;
 
-import org.junit.Test;
-
 import static org.junit.Assert.fail;
+
+import org.junit.Test;
 
 /**
  * AbstractMultivaluedMap unit tests.
@@ -50,16 +51,17 @@ import static org.junit.Assert.fail;
  */
 public class AbstractMultivaluedMapTest {
 
-    /**
-     * A test to reproduce issue reported in JAX_RS_SPEC-384.
-     */
-    @Test
-    public void testNpeThrownFromMap() {
-        try {
-            new AbstractMultivaluedMap<String, Object>(null) {};
-            fail("NullPointerException expected.");
-        } catch (NullPointerException npe) {
-            // passed
-        }
+  /**
+   * A test to reproduce issue reported in JAX_RS_SPEC-384.
+   */
+  @Test
+  public void testNpeThrownFromMap() {
+    try {
+      new AbstractMultivaluedMap<String, Object>(null) {
+      };
+      fail("NullPointerException expected.");
+    } catch (NullPointerException npe) {
+      // passed
     }
+  }
 }

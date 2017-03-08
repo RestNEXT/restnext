@@ -13,6 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+
 package org.restnext.core.http.url;
 
 import java.util.HashMap;
@@ -22,76 +23,78 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * URL regex.
+ *
  * @author toddf
  * @since Jan 7, 2011
  */
 public class UrlRegex implements UrlMatcher {
 
-    public static final String PARAMETER_PREFIX = "regexGroup";
+  public static final String PARAMETER_PREFIX = "regexGroup";
 
-    private Pattern pattern;
+  private Pattern pattern;
 
-    public UrlRegex(String regex) {
-        this(Pattern.compile(regex));
+  public UrlRegex(String regex) {
+    this(Pattern.compile(regex));
+  }
+
+  public UrlRegex(Pattern pattern) {
+    super();
+    setPattern(pattern);
+  }
+
+  @Override
+  public boolean matches(String url) {
+    return (match(url) != null);
+  }
+
+  @Override
+  public UrlMatch match(String url) {
+    Matcher matcher = pattern.matcher(url);
+
+    if (matcher.matches()) {
+      return new UrlMatch(extractParameters(matcher));
     }
 
-    public UrlRegex(Pattern pattern) {
-        super();
-        setPattern(pattern);
+    return null;
+  }
+
+  public String getPattern() {
+    return pattern.pattern();
+  }
+
+  private void setPattern(Pattern pattern) {
+    this.pattern = pattern;
+  }
+
+  @Override
+  public List<String> getParameterNames() {
+    return null;
+  }
+
+  @Override
+  public String toRegexPattern(String url) {
+    // do not modify the uri, since the caller is building their own regex and is ON THEIR OWN...
+    return url;
+  }
+
+  /**
+   * Extracts parameter values from a Matcher instance.
+   *
+   * @param matcher matcher
+   * @return a Map containing parameter values indexed by their corresponding parameter name.
+   */
+  private Map<String, String> extractParameters(Matcher matcher) {
+    Map<String, String> values = new HashMap<>();
+
+    for (int i = 0; i < matcher.groupCount(); i++) {
+      String value = matcher.group(i + 1);
+
+      if (value != null) {
+        values.put(PARAMETER_PREFIX + i, value);
+      }
     }
 
-    public String getPattern() {
-        return pattern.pattern();
-    }
-
-    private void setPattern(Pattern pattern) {
-        this.pattern = pattern;
-    }
-
-    @Override
-    public List<String> getParameterNames() {
-        return null;
-    }
-
-    @Override
-    public boolean matches(String url) {
-        return (match(url) != null);
-    }
-
-    @Override
-    public UrlMatch match(String url) {
-        Matcher matcher = pattern.matcher(url);
-
-        if (matcher.matches()) {
-            return new UrlMatch(extractParameters(matcher));
-        }
-
-        return null;
-    }
-
-    @Override
-    public String toRegexPattern(String url) {
-        // do not modify the uri, since the caller is building their own regex and is ON THEIR OWN... :-)
-        return url;
-    }
-
-    /**
-     * Extracts parameter values from a Matcher instance.
-     *
-     * @param matcher
-     * @return a Map containing parameter values indexed by their corresponding parameter name.
-     */
-    private Map<String, String> extractParameters(Matcher matcher) {
-        Map<String, String> values = new HashMap<>();
-
-        for (int i = 0; i < matcher.groupCount(); i++) {
-            String value = matcher.group(i + 1);
-
-            if (value != null) {
-                values.put(PARAMETER_PREFIX + i, value);
-            }
-        }
-
-        return values;
-    }
+    return values;
+  }
 }

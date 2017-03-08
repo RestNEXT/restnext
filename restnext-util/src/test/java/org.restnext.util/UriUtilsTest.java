@@ -13,102 +13,108 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.util;
 
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Created by thiago on 23/11/16.
  */
 public class UriUtilsTest {
 
-    @Test
-    public void illegalInstatiationUtillityClass() throws IllegalAccessException, InstantiationException, NoSuchMethodException {
-        try {
-            Constructor c = UriUtils.class.getDeclaredConstructor();
-            assertTrue(Modifier.isPrivate(c.getModifiers()));
-            c.setAccessible(true);
-            c.newInstance();
-        } catch (InvocationTargetException e) {
-            assertThat(e.getCause(), is(instanceOf(AssertionError.class)));
-        }
+  @Test
+  public void illegalInstatiationUtillityClass()
+      throws IllegalAccessException, InstantiationException, NoSuchMethodException {
+    try {
+      Constructor c = UriUtils.class.getDeclaredConstructor();
+      assertTrue(Modifier.isPrivate(c.getModifiers()));
+      c.setAccessible(true);
+      c.newInstance();
+    } catch (InvocationTargetException e) {
+      assertThat(e.getCause(), is(instanceOf(AssertionError.class)));
     }
+  }
 
-    @Test
-    public void normalizeTest() {
-        assertNull(UriUtils.normalize(null));
-        assertEquals("/uri", UriUtils.normalize("uri"));
-        assertEquals("/uri", UriUtils.normalize("/uri"));
-        assertEquals("/uri", UriUtils.normalize("/uri/"));
+  @Test
+  public void normalizeTest() {
+    assertNull(UriUtils.normalize(null));
+    assertEquals("/uri", UriUtils.normalize("uri"));
+    assertEquals("/uri", UriUtils.normalize("/uri"));
+    assertEquals("/uri", UriUtils.normalize("/uri/"));
 
-        assertEquals("/uri/1", UriUtils.normalize("uri/1"));
-        assertEquals("/uri/1", UriUtils.normalize("/uri/1"));
-        assertEquals("/uri/1", UriUtils.normalize("/uri/1/"));
+    assertEquals("/uri/1", UriUtils.normalize("uri/1"));
+    assertEquals("/uri/1", UriUtils.normalize("/uri/1"));
+    assertEquals("/uri/1", UriUtils.normalize("/uri/1/"));
 
-        assertEquals("/uri/1/2", UriUtils.normalize("uri/1/2"));
-        assertEquals("/uri/1/2", UriUtils.normalize("/uri/1/2"));
-        assertEquals("/uri/1/2", UriUtils.normalize("/uri/1/2/"));
+    assertEquals("/uri/1/2", UriUtils.normalize("uri/1/2"));
+    assertEquals("/uri/1/2", UriUtils.normalize("/uri/1/2"));
+    assertEquals("/uri/1/2", UriUtils.normalize("/uri/1/2/"));
 
-        assertEquals("/uri/1/2/{name}", UriUtils.normalize("uri/1/2/{name}"));
-        assertEquals("/uri/1/2/{name}", UriUtils.normalize("/uri/1/2/{name}"));
-        assertEquals("/uri/1/2/{name}", UriUtils.normalize("/uri/1/2/{name}/"));
+    assertEquals("/uri/1/2/{name}", UriUtils.normalize("uri/1/2/{name}"));
+    assertEquals("/uri/1/2/{name}", UriUtils.normalize("/uri/1/2/{name}"));
+    assertEquals("/uri/1/2/{name}", UriUtils.normalize("/uri/1/2/{name}/"));
 
-        assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("uri/1/2/{name}/\\d+"));
-        assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("/uri/1/2/{name}/\\d+"));
-        assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("/uri/1/2/{name}/\\d+/"));
-    }
+    assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("uri/1/2/{name}/\\d+"));
+    assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("/uri/1/2/{name}/\\d+"));
+    assertEquals("/uri/1/2/{name}/\\d+", UriUtils.normalize("/uri/1/2/{name}/\\d+/"));
+  }
 
-    @Test
-    public void isPathParamUriTest() {
-        assertFalse(UriUtils.isPathParamUri(null));
+  @Test
+  public void isPathParamUriTest() {
+    assertFalse(UriUtils.isPathParamUri(null));
 
-        assertTrue(UriUtils.isPathParamUri("/uri"));
-        assertTrue( UriUtils.isPathParamUri("/uri/"));
-        assertTrue( UriUtils.isPathParamUri("/uri?"));
+    assertTrue(UriUtils.isPathParamUri("/uri"));
+    assertTrue(UriUtils.isPathParamUri("/uri/"));
+    assertTrue(UriUtils.isPathParamUri("/uri?"));
 
-        assertTrue(UriUtils.isPathParamUri("/uri/1"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1/"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1?"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1?"));
 
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2/"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2?"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2/"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2?"));
 
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}/"));
-        assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}?"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}/"));
+    assertTrue(UriUtils.isPathParamUri("/uri/1/2/{name}?"));
 
-        assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+"));
-        assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+/"));
-        assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+?"));
-        assertFalse(UriUtils.isPathParamUri("/uri/1/2/!@#$%*()_-+=[]:;.,|/\\d+?"));
-    }
+    assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+"));
+    assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+/"));
+    assertFalse(UriUtils.isPathParamUri("/uri/1/2/{name}/\\d+?"));
+    assertFalse(UriUtils.isPathParamUri("/uri/1/2/!@#$%*()_-+=[]:;.,|/\\d+?"));
+  }
 
-    @Test
-    public void pathParamUriConstantTest() {
-        assertEquals("^([/])(([/\\w])+(/\\{[\\w]+\\})*)*([?])?$", UriUtils.PATH_PARAM_URI.pattern());
-    }
+  @Test
+  public void pathParamUriConstantTest() {
+    assertEquals("^([/])(([/\\w])+(/\\{[\\w]+\\})*)*([?])?$", UriUtils.PATH_PARAM_URI.pattern());
+  }
 
-    @Test
-    public void addFirstSlashTest() {
-        assertNull(UriUtils.addFirstSlash(null));
-        assertEquals("/uri", UriUtils.addFirstSlash("uri"));
-        assertEquals("/uri", UriUtils.addFirstSlash("/uri"));
-    }
+  @Test
+  public void addFirstSlashTest() {
+    assertNull(UriUtils.addFirstSlash(null));
+    assertEquals("/uri", UriUtils.addFirstSlash("uri"));
+    assertEquals("/uri", UriUtils.addFirstSlash("/uri"));
+  }
 
-    @Test
-    public void removeLastSlashTest() {
-        assertNull(UriUtils.removeLastSlash(null));
-        assertEquals("/uri", UriUtils.removeLastSlash("/uri/"));
-        assertEquals("/uri", UriUtils.removeLastSlash("/uri"));
-    }
+  @Test
+  public void removeLastSlashTest() {
+    assertNull(UriUtils.removeLastSlash(null));
+    assertEquals("/uri", UriUtils.removeLastSlash("/uri/"));
+    assertEquals("/uri", UriUtils.removeLastSlash("/uri"));
+  }
 
 }

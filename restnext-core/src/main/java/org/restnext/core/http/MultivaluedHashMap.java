@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.restnext.core.http;
 
 import java.io.Serializable;
@@ -49,7 +50,7 @@ import java.util.Map;
 /**
  * A hash table based implementation of {@link MultivaluedMap} interface.
  *
- * This implementation provides all of the optional map operations. This class
+ * <p>This implementation provides all of the optional map operations. This class
  * makes no guarantees as to the order of the map; in particular, it does not
  * guarantee that the order will remain constant over time. The implementation
  * permits {@code null} key. By default the implementation does also permit
@@ -57,7 +58,7 @@ import java.util.Map;
  * by overriding the protected {@link #addNull(List) addNull(...)} and
  * {@link #addFirstNull(List) addFirstNull(...)} methods.
  *
- * This implementation provides constant-time performance for the basic
+ * <p>This implementation provides constant-time performance for the basic
  * operations (<tt>get</tt> and <tt>put</tt>), assuming the hash function
  * disperses the elements properly among the buckets. Iteration over
  * collection views requires time proportional to the "capacity" of the
@@ -66,7 +67,7 @@ import java.util.Map;
  * capacity too high (or the load factor too low) if iteration performance is
  * important.
  *
- * An instance of <tt>MultivaluedHashMap</tt> has two parameters that affect its
+ * <p>An instance of <tt>MultivaluedHashMap</tt> has two parameters that affect its
  * performance: <i>initial capacity</i> and <i>load factor</i>. The <i>capacity</i>
  * is the number of buckets in the hash table, and the initial capacity is simply
  * the capacity at the time the hash table is created. The <i>load factor</i> is
@@ -76,7 +77,7 @@ import java.util.Map;
  * <i>rehashed</i> (that is, internal data structures are rebuilt) so that the
  * hash table has approximately twice the number of buckets.
  *
- * As a general rule, the default load factor (.75) offers a good tradeoff
+ * <p>As a general rule, the default load factor (.75) offers a good tradeoff
  * between time and space costs. Higher values decrease the space overhead
  * but increase the lookup cost (reflected in most of the operations of the
  * <tt>HashMap</tt> class, including <tt>get</tt> and <tt>put</tt>). The
@@ -86,12 +87,12 @@ import java.util.Map;
  * than the maximum number of entries divided by the load factor, no
  * rehash operations will ever occur.
  *
- * If many mappings are to be stored in a <tt>MultivaluedHashMap</tt> instance,
+ * <p>If many mappings are to be stored in a <tt>MultivaluedHashMap</tt> instance,
  * creating it with a sufficiently large capacity will allow the mappings to
  * be stored more efficiently than letting it perform automatic rehashing as
  * needed to grow the table.
  *
- * <strong>Note that this implementation is not guaranteed to be synchronized.</strong>
+ * <p><strong>Note that this implementation is not guaranteed to be synchronized.</strong>
  * If multiple threads access a hash map concurrently, and at least one of
  * the threads modifies the map structurally, it <i>must</i> be
  * synchronized externally. (A structural modification is any operation
@@ -100,7 +101,7 @@ import java.util.Map;
  * structural modification.) This is typically accomplished by
  * synchronizing on some object that naturally encapsulates the map.
  *
- * The iterators returned by all of this class's "collection view methods"
+ * <p>The iterators returned by all of this class's "collection view methods"
  * are <i>fail-fast</i>: if the map is structurally modified at any time after
  * the iterator is created, in any way except through the iterator's own
  * <tt>remove</tt> method, the iterator will throw a {@link ConcurrentModificationException}.
@@ -108,7 +109,7 @@ import java.util.Map;
  * cleanly, rather than risking arbitrary, non-deterministic behavior at an
  * undetermined time in the future.
  *
- * Note that the fail-fast behavior of an iterator cannot be guaranteed
+ * <p>Note that the fail-fast behavior of an iterator cannot be guaranteed
  * as it is, generally speaking, impossible to make any hard guarantees in the
  * presence of unsynchronized concurrent modification. Fail-fast iterators
  * throw <tt>ConcurrentModificationException</tt> on a best-effort basis.
@@ -124,80 +125,78 @@ import java.util.Map;
  */
 public class MultivaluedHashMap<K, V> extends AbstractMultivaluedMap<K, V> implements Serializable {
 
-    private static final long serialVersionUID = -6052320403766368902L;
+  private static final long serialVersionUID = -6052320403766368902L;
 
-    /**
-     * Constructs an empty multivalued hash map with the default initial capacity
-     * ({@code 16}) and the default load factor ({@code 0.75}).
-     */
-    public MultivaluedHashMap() {
-        super(new HashMap<>());
-    }
+  /**
+   * Constructs an empty multivalued hash map with the specified initial
+   * capacity and the default load factor ({@code 0.75}).
+   *
+   * @param initialCapacity the initial capacity.
+   * @throws IllegalArgumentException if the initial capacity is negative.
+   */
+  public MultivaluedHashMap(int initialCapacity) {
+    super(new HashMap<>(initialCapacity));
+  }
 
-    /**
-     * Constructs an empty multivalued hash map with the specified initial
-     * capacity and the default load factor ({@code 0.75}).
-     *
-     * @param initialCapacity the initial capacity.
-     * @throws IllegalArgumentException if the initial capacity is negative.
-     */
-    public MultivaluedHashMap(int initialCapacity) {
-        super(new HashMap<>(initialCapacity));
-    }
+  /**
+   * Constructs an empty multivalued hash map with the specified initial
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity
+   * @param loadFactor      the load factor
+   * @throws IllegalArgumentException if the initial capacity is negative or the load factor is
+   *                                  nonpositive
+   */
+  public MultivaluedHashMap(int initialCapacity, float loadFactor) {
+    super(new HashMap<>(initialCapacity, loadFactor));
+  }
 
-    /**
-     * Constructs an empty multivalued hash map with the specified initial
-     * capacity and load factor.
-     *
-     * @param initialCapacity the initial capacity
-     * @param loadFactor      the load factor
-     * @throws IllegalArgumentException if the initial capacity is negative
-     *                                  or the load factor is nonpositive
-     */
-    public MultivaluedHashMap(int initialCapacity, float loadFactor) {
-        super(new HashMap<>(initialCapacity, loadFactor));
-    }
+  /**
+   * Constructs a new multivalued hash map with the same mappings as the
+   * specified {@link MultivaluedMap }. The {@link List} instances holding
+   * the values of each key are created anew instead of being reused.
+   *
+   * @param map the multivalued map whose mappings are to be placed in this multivalued map.
+   * @throws NullPointerException if the specified map is {@code null}
+   */
+  public MultivaluedHashMap(MultivaluedMap<? extends K, ? extends V> map) {
+    this();
+    putAll(map);
+  }
 
-    /**
-     * Constructs a new multivalued hash map with the same mappings as the
-     * specified {@link MultivaluedMap }. The {@link List} instances holding
-     * the values of each key are created anew instead of being reused.
-     *
-     * @param map the multivalued map whose mappings are to be placed in this
-     *            multivalued map.
-     * @throws NullPointerException if the specified map is {@code null}
-     */
-    public MultivaluedHashMap(MultivaluedMap<? extends K, ? extends V> map) {
-        this();
-        putAll(map);
-    }
+  /**
+   * Constructs an empty multivalued hash map with the default initial capacity
+   * ({@code 16}) and the default load factor ({@code 0.75}).
+   */
+  public MultivaluedHashMap() {
+    super(new HashMap<>());
+  }
 
-    /**
-     * This private method is used by the copy constructor to avoid exposing
-     * additional generic parameters through the public API documentation.
-     *
-     * @param <T> any subclass of K
-     * @param <U> any subclass of V
-     * @param map the map
-     */
-    private <T extends K, U extends V> void putAll(MultivaluedMap<T, U> map) {
-        for (Entry<T, List<U>> e : map.entrySet()) {
-            store.put(e.getKey(), new ArrayList<>(e.getValue()));
-        }
+  /**
+   * This private method is used by the copy constructor to avoid exposing
+   * additional generic parameters through the public API documentation.
+   *
+   * @param <T> any subclass of K
+   * @param <U> any subclass of V
+   * @param map the map
+   */
+  private <T extends K, U extends V> void putAll(MultivaluedMap<T, U> map) {
+    for (Entry<T, List<U>> e : map.entrySet()) {
+      store.put(e.getKey(), new ArrayList<>(e.getValue()));
     }
+  }
 
-    /**
-     * Constructs a new multivalued hash map with the same mappings as the
-     * specified single-valued {@link Map }.
-     *
-     * @param map the single-valued map whose mappings are to be placed in this
-     *            multivalued map.
-     * @throws NullPointerException if the specified map is {@code null}
-     */
-    public MultivaluedHashMap(Map<? extends K, ? extends V> map) {
-        this();
-        for (Entry<? extends K, ? extends V> e : map.entrySet()) {
-            this.putSingle(e.getKey(), e.getValue());
-        }
+  /**
+   * Constructs a new multivalued hash map with the same mappings as the
+   * specified single-valued {@link Map }.
+   *
+   * @param map the single-valued map whose mappings are to be placed in this multivalued map.
+   * @throws NullPointerException if the specified map is {@code null}
+   */
+  public MultivaluedHashMap(Map<? extends K, ? extends V> map) {
+    this();
+    for (Entry<? extends K, ? extends V> e : map.entrySet()) {
+      this.putSingle(e.getKey(), e.getValue());
     }
+  }
 }

@@ -13,23 +13,26 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+
 package org.restnext.core.http.url;
 
 import java.util.List;
 
 /**
+ * UrlMatcher interface.
+ *
  * @author toddf
  * @since Jan 7, 2011
  */
 public interface UrlMatcher {
 
-    boolean matches(String url);
+  boolean matches(String url);
 
-    UrlMatch match(String url);
+  UrlMatch match(String url);
 
-    String getPattern();
+  String getPattern();
 
-    List<String> getParameterNames();
+  List<String> getParameterNames();
 
-    String toRegexPattern(String url);
+  String toRegexPattern(String url);
 }

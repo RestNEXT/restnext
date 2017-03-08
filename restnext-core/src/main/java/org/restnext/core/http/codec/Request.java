@@ -13,91 +13,97 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.restnext.core.http.codec;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.MultivaluedMap;
 
 import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.restnext.core.http.EntityTag;
+import org.restnext.core.http.MediaType;
+import org.restnext.core.http.MultivaluedMap;
+
 public interface Request extends Message, Headers {
 
-    FullHttpRequest getFullHttpRequest();
+  static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+    return new RequestImpl(ctx, request);
+  }
 
-    URI getBaseURI();
+  FullHttpRequest getFullHttpRequest();
 
-    URI getURI();
+  URI getBaseUri();
 
-    Method getMethod();
+  URI getUri();
 
-    MultivaluedMap<String, String> getParams();
+  Method getMethod();
 
-    byte[] getContent();
+  MultivaluedMap<String, String> getParams();
 
-    boolean hasContent();
+  byte[] getContent();
 
-    int getLength();
+  boolean hasContent();
 
-    boolean isKeepAlive();
+  int getLength();
 
-    Date getDate();
+  boolean isKeepAlive();
 
-    MediaType getMediaType();
+  Date getDate();
 
-    Response.Builder evaluatePreconditions(EntityTag eTag);
+  MediaType getMediaType();
 
-    Response.Builder evaluatePreconditions(Date lastModified);
+  Response.Builder evaluatePreconditions(EntityTag entityTag);
 
-    Response.Builder evaluatePreconditions(Date lastModified, EntityTag eTag);
+  Response.Builder evaluatePreconditions(Date lastModified);
 
-    Response.Builder evaluatePreconditions();
+  Response.Builder evaluatePreconditions(Date lastModified, EntityTag entityTag);
 
-    //============================
-    //     STATIC METHODS
-    //============================
+  //============================
+  //     STATIC METHODS
+  //============================
 
-    static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
-        return new RequestImpl(ctx, request);
+  Response.Builder evaluatePreconditions();
+
+  //============================
+  //     HTTP METHOD
+  //============================
+
+  enum Method {
+
+    GET, POST, PUT, DELETE;
+
+    private static final Map<String, Method> methodMap = new HashMap<>();
+
+    static {
+      methodMap.put(GET.toString(), GET);
+      methodMap.put(POST.toString(), POST);
+      methodMap.put(PUT.toString(), PUT);
+      methodMap.put(DELETE.toString(), DELETE);
     }
 
-    //============================
-    //     HTTP METHOD
-    //============================
-
-    enum Method {
-
-        GET, POST, PUT, DELETE;
-
-        private static final Map<String, Method> methodMap = new HashMap<>();
-
-        static {
-            methodMap.put(GET.toString(), GET);
-            methodMap.put(POST.toString(), POST);
-            methodMap.put(PUT.toString(), PUT);
-            methodMap.put(DELETE.toString(), DELETE);
-        }
-
-        @Override
-        public String toString() {
-            return name();
-        }
-
-        public static Method of(HttpMethod method) {
-            if (method == null) return null;
-            return of(method.toString());
-        }
-
-        public static Method of(String method) {
-            if (method == null) return null;
-            return methodMap.getOrDefault(method, null);
-        }
+    public static Method of(HttpMethod method) {
+      if (method == null) {
+        return null;
+      }
+      return of(method.toString());
     }
+
+    public static Method of(String method) {
+      if (method == null) {
+        return null;
+      }
+      return methodMap.getOrDefault(method, null);
+    }
+
+    @Override
+    public String toString() {
+      return name();
+    }
+  }
 
 }
