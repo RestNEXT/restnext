@@ -42,6 +42,7 @@ import io.netty.util.CharsetUtil;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +68,14 @@ final class RequestImpl implements Request {
   private final MultivaluedMap<String, String> headers;
   private final MultivaluedMap<String, String> parameters;
   private byte[] content;
+  private final Charset charset;
 
   RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
 
     this.request = request;
+    this.charset = HttpUtil.getCharset(request, CharsetUtil.UTF_8);
     this.version = Version.of(request.protocolVersion());
     this.method = Method.of(request.method());
     this.uri = URI.create(normalize(request.uri()));
@@ -87,7 +90,7 @@ final class RequestImpl implements Request {
 
     this.parameters = new MultivaluedHashMap<>();
     // decode the inbound netty request uri parameters.
-    QueryStringDecoder queryDecoder = new QueryStringDecoder(request.uri());
+    QueryStringDecoder queryDecoder = new QueryStringDecoder(request.uri(), charset);
     for (Map.Entry<String, List<String>> entry : queryDecoder.parameters().entrySet()) {
       this.parameters.addAll(entry.getKey(), entry.getValue());
     }
@@ -103,7 +106,7 @@ final class RequestImpl implements Request {
       if (isFormData) {
         // decode the inbound netty request body multipart/form-data parameters.
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(
-            new DefaultHttpDataFactory(), this.request);
+            new DefaultHttpDataFactory(), request);
         try {
           for (InterfaceHttpData data : decoder.getBodyHttpDatas()) {
             InterfaceHttpData.HttpDataType type = data.getHttpDataType();
@@ -131,7 +134,7 @@ final class RequestImpl implements Request {
         // decode the inbound netty request body raw | form-url-encoded | octet-stream parameters.
         this.content = request.content().hasArray()
             ? request.content().array()
-            : request.content().toString(CharsetUtil.UTF_8).getBytes();
+            : request.content().toString(charset).getBytes();
       }
     }
   }
@@ -204,6 +207,11 @@ final class RequestImpl implements Request {
   public MediaType getMediaType() {
     String header = getHeader(CONTENT_TYPE);
     return header != null ? MediaType.parse(header) : null;
+  }
+
+  @Override
+  public Charset charset() {
+    return charset;
   }
 
   @Override

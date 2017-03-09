@@ -60,8 +60,8 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
   @Override
   protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
-    if (!req.decoderResult().isSuccess()) {
-      throw new ServerException(BAD_REQUEST);
+    if (req.decoderResult().isFailure()) {
+      throw new ServerException(req.decoderResult().cause(), BAD_REQUEST);
     }
 
     // Handle 100 - Continue request.

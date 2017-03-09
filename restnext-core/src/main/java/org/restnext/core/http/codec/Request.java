@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,8 @@ public interface Request extends Message, Headers {
   Date getDate();
 
   MediaType getMediaType();
+
+  Charset charset();
 
   Response.Builder evaluatePreconditions(EntityTag entityTag);
 
