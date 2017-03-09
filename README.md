@@ -177,4 +177,8 @@ Maven Artifact:
  - Write Tests
  - Add Javadoc and Code Comments
 
-####Fell free to contribute!
+#### Fell free to contribute!
+
+#### Special thanks
+
+Thanks to my friend [Wenderson Ferreira de Souza](https://github.com/wendersonferreira) who contributed with some ideas and also encouraged me to start creating this software.
