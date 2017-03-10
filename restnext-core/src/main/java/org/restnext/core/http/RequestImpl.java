@@ -31,6 +31,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
@@ -52,9 +53,8 @@ import java.util.Optional;
 /**
  * Created by thiago on 24/08/16.
  */
-final class RequestImpl implements Request {
+public final class RequestImpl implements Request {
 
-  private final FullHttpRequest request;
   private final Version version;
   private final Method method;
   private final URI baseUri;
@@ -71,14 +71,15 @@ final class RequestImpl implements Request {
    * @param context netty channel handler context
    * @param request netty full http request
    */
-  RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
+  public RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
 
-    this.request = request;
     this.charset = HttpUtil.getCharset(request, CharsetUtil.UTF_8);
-    this.version = Version.of(request.protocolVersion());
-    this.method = Method.of(request.method());
+    this.version = HttpVersion.HTTP_1_0.equals(request.protocolVersion())
+        ? Version.HTTP_1_0
+        : Version.HTTP_1_1;
+    this.method = Method.valueOf(request.method().name());
     this.uri = URI.create(normalize(request.uri()));
     this.baseUri = createBaseUri(context, request);
     this.keepAlive = HttpUtil.isKeepAlive(request);
@@ -148,11 +149,6 @@ final class RequestImpl implements Request {
       host = address.getHostName() + ":" + address.getPort();
     }
     return URI.create(String.format("%s://%s/", protocol, host));
-  }
-
-  @Override
-  public FullHttpRequest getFullHttpRequest() {
-    return request;
   }
 
   @Override

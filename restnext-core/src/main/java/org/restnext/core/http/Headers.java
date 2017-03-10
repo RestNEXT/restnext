@@ -16,8 +16,6 @@
 
 package org.restnext.core.http;
 
-import io.netty.util.AsciiString;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
  */
 interface Headers {
 
-  default String getHeader(AsciiString name) {
+  default String getHeader(CharSequence name) {
     return getHeader(name.toString());
   }
 
@@ -41,7 +39,7 @@ interface Headers {
     return values.stream().collect(Collectors.joining(","));
   }
 
-  default List<String> getAllHeader(AsciiString name) {
+  default List<String> getAllHeader(CharSequence name) {
     return getAllHeader(name.toString());
   }
 

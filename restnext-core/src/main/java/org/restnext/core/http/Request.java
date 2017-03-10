@@ -16,19 +16,11 @@
 
 package org.restnext.core.http;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpMethod;
-
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public interface Request extends Message, Headers {
-
-  FullHttpRequest getFullHttpRequest();
 
   URI getBaseUri();
 
@@ -60,41 +52,8 @@ public interface Request extends Message, Headers {
 
   Response.Builder evaluatePreconditions();
 
-  static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
-    return new RequestImpl(ctx, request);
-  }
-
   enum Method {
-
-    GET, POST, PUT, DELETE;
-
-    private static final Map<String, Method> methodMap = new HashMap<>();
-
-    static {
-      methodMap.put(GET.toString(), GET);
-      methodMap.put(POST.toString(), POST);
-      methodMap.put(PUT.toString(), PUT);
-      methodMap.put(DELETE.toString(), DELETE);
-    }
-
-    public static Method of(HttpMethod method) {
-      if (method == null) {
-        return null;
-      }
-      return of(method.toString());
-    }
-
-    public static Method of(String method) {
-      if (method == null) {
-        return null;
-      }
-      return methodMap.getOrDefault(method, null);
-    }
-
-    @Override
-    public String toString() {
-      return name();
-    }
+    GET, POST, PUT, DELETE
   }
 
 }

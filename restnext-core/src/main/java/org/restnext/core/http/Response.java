@@ -16,9 +16,6 @@
 
 package org.restnext.core.http;
 
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +26,24 @@ import java.util.Map;
 import java.util.Set;
 
 public interface Response extends Message, Headers {
+
+  Status getStatus();
+
+  byte[] getContent();
+
+  boolean hasContent();
+
+  MediaType getMediaType();
+
+  int getLength();
+
+  Set<Request.Method> getAllowedMethods();
+
+  EntityTag getEntityTag();
+
+  Date getLastModified();
+
+  URI getLocation();
 
   static Response.Builder status(int status) {
     return status(Status.fromStatusCode(status));
@@ -118,85 +133,59 @@ public interface Response extends Message, Headers {
     return status(Status.FOUND).location(location);
   }
 
-  Status getStatus();
-
-  byte[] getContent();
-
-  FullHttpResponse getFullHttpResponse();
-
-  boolean hasContent();
-
-  MediaType getMediaType();
-
-  int getLength();
-
-  Set<Request.Method> getAllowedMethods();
-
-  EntityTag getEntityTag();
-
-  Date getLastModified();
-
-  URI getLocation();
-
   enum Status {
 
-    OK(HttpResponseStatus.OK),
-    CREATED(HttpResponseStatus.CREATED),
-    ACCEPTED(HttpResponseStatus.ACCEPTED),
-    NO_CONTENT(HttpResponseStatus.NO_CONTENT),
-    RESET_CONTENT(HttpResponseStatus.RESET_CONTENT),
-    PARTIAL_CONTENT(HttpResponseStatus.PARTIAL_CONTENT),
-    MOVED_PERMANENTLY(HttpResponseStatus.MOVED_PERMANENTLY),
-    FOUND(HttpResponseStatus.FOUND),
-    SEE_OTHER(HttpResponseStatus.SEE_OTHER),
-    NOT_MODIFIED(HttpResponseStatus.NOT_MODIFIED),
-    USE_PROXY(HttpResponseStatus.USE_PROXY),
-    TEMPORARY_REDIRECT(HttpResponseStatus.TEMPORARY_REDIRECT),
-    BAD_REQUEST(HttpResponseStatus.BAD_REQUEST),
-    UNAUTHORIZED(HttpResponseStatus.UNAUTHORIZED),
-    PAYMENT_REQUIRED(HttpResponseStatus.PAYMENT_REQUIRED),
-    FORBIDDEN(HttpResponseStatus.FORBIDDEN),
-    NOT_FOUND(HttpResponseStatus.NOT_FOUND),
-    METHOD_NOT_ALLOWED(HttpResponseStatus.METHOD_NOT_ALLOWED),
-    NOT_ACCEPTABLE(HttpResponseStatus.NOT_ACCEPTABLE),
-    PROXY_AUTHENTICATION_REQUIRED(HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED),
-    REQUEST_TIMEOUT(HttpResponseStatus.REQUEST_TIMEOUT),
-    CONFLICT(HttpResponseStatus.CONFLICT),
-    GONE(HttpResponseStatus.GONE),
-    LENGTH_REQUIRED(HttpResponseStatus.LENGTH_REQUIRED),
-    PRECONDITION_FAILED(HttpResponseStatus.PRECONDITION_FAILED),
-    REQUEST_ENTITY_TOO_LARGE(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE),
-    REQUEST_URI_TOO_LONG(HttpResponseStatus.REQUEST_URI_TOO_LONG),
-    UNSUPPORTED_MEDIA_TYPE(HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE),
-    REQUESTED_RANGE_NOT_SATISFIABLE(HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE),
-    EXPECTATION_FAILED(HttpResponseStatus.EXPECTATION_FAILED),
-    INTERNAL_SERVER_ERROR(HttpResponseStatus.INTERNAL_SERVER_ERROR),
-    NOT_IMPLEMENTED(HttpResponseStatus.NOT_IMPLEMENTED),
-    BAD_GATEWAY(HttpResponseStatus.BAD_GATEWAY),
-    SERVICE_UNAVAILABLE(HttpResponseStatus.SERVICE_UNAVAILABLE),
-    GATEWAY_TIMEOUT(HttpResponseStatus.GATEWAY_TIMEOUT),
-    HTTP_VERSION_NOT_SUPPORTED(HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED),
-    CONTINUE(HttpResponseStatus.CONTINUE);
+    OK(200, "OK"),
+    CREATED(201, "Created"),
+    ACCEPTED(202, "Accepted"),
+    NO_CONTENT(204, "No Content"),
+    RESET_CONTENT(205, "Reset Content"),
+    PARTIAL_CONTENT(206, "Partial Content"),
+    MOVED_PERMANENTLY(301, "Moved Permanently"),
+    FOUND(302, "Found"),
+    SEE_OTHER(303, "See Other"),
+    NOT_MODIFIED(304, "Not Modified"),
+    USE_PROXY(305, "Use Proxy"),
+    TEMPORARY_REDIRECT(307, "Temporary Redirect"),
+    BAD_REQUEST(400, "Bad Request"),
+    UNAUTHORIZED(401, "Unauthorized"),
+    PAYMENT_REQUIRED(402, "Payment Required"),
+    FORBIDDEN(403, "Forbidden"),
+    NOT_FOUND(404, "Not Found"),
+    METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
+    NOT_ACCEPTABLE(406, "Not Acceptable"),
+    PROXY_AUTHENTICATION_REQUIRED(407, "Proxy Authentication Required"),
+    REQUEST_TIMEOUT(408, "Request Timeout"),
+    CONFLICT(409, "Conflict"),
+    GONE(410, "Gone"),
+    LENGTH_REQUIRED(411, "Length Required"),
+    PRECONDITION_FAILED(412, "Precondition Failed"),
+    REQUEST_ENTITY_TOO_LARGE(413, "Request Entity Too Large"),
+    REQUEST_URI_TOO_LONG(414, "Request-URI Too Long"),
+    UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
+    REQUESTED_RANGE_NOT_SATISFIABLE(416, "Requested Range Not Satisfiable"),
+    EXPECTATION_FAILED(417, "Expectation Failed"),
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
+    NOT_IMPLEMENTED(501, "Not Implemented"),
+    BAD_GATEWAY(502, "Bad Gateway"),
+    SERVICE_UNAVAILABLE(503, "Service Unavailable"),
+    GATEWAY_TIMEOUT(504, "Gateway Timeout"),
+    HTTP_VERSION_NOT_SUPPORTED(505, "HTTP Version Not Supported"),
+    CONTINUE(100, "Continue");
 
     private final int code;
     private final String reason;
     private final Family family;
-    private final HttpResponseStatus nettyStatus;
 
-    Status(final HttpResponseStatus status) {
-      Holder.MAP.put(status, this);
-      this.nettyStatus = status;
-      this.code = status.code();
-      this.reason = status.reasonPhrase();
-      this.family = Family.familyOf(status.code());
+    Status(int code, String reason) {
+      Holder.MAP.put(code, this);
+      this.code = code;
+      this.reason = reason;
+      this.family = Family.familyOf(code);
     }
 
     public static Status fromStatusCode(int statusCode) {
-      return fromStatus(HttpResponseStatus.valueOf(statusCode));
-    }
-
-    public static Status fromStatus(HttpResponseStatus status) {
-      return Holder.MAP.getOrDefault(status, null);
+      return Holder.MAP.getOrDefault(statusCode, null);
     }
 
     public Family getFamily() {
@@ -205,10 +194,6 @@ public interface Response extends Message, Headers {
 
     public int getStatusCode() {
       return code;
-    }
-
-    public HttpResponseStatus getNettyStatus() {
-      return nettyStatus;
     }
 
     @Override
@@ -248,7 +233,7 @@ public interface Response extends Message, Headers {
     }
 
     private static class Holder {
-      static Map<HttpResponseStatus, Status> MAP = new HashMap<>();
+      static Map<Integer, Status> MAP = new HashMap<>();
     }
   }
 

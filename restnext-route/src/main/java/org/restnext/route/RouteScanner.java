@@ -175,9 +175,11 @@ public final class RouteScanner {
       for (Routes.Route route : routes.getRoute()) {
         String uri = route.getPath();
         Boolean enable = route.getEnable();
+
         // parse String http method list to Request.Method array.
-        Request.Method[] methods = route.getMethods().getMethod().stream().map(Request.Method::of)
-            .toArray(Request.Method[]::new);
+        Request.Method[] methods = route.getMethods().getMethod().stream()
+            .map(Request.Method::valueOf).toArray(Request.Method[]::new);
+
         // parse String media type list to MediaType array.
         MediaType[] medias = route.getMedias().getMedia().stream().map(MediaType::parse)
             .toArray(MediaType[]::new);

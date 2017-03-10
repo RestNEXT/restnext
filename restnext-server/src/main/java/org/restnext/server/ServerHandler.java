@@ -23,6 +23,7 @@ import static org.restnext.core.http.Response.Status.NOT_FOUND;
 import static org.restnext.core.http.Response.Status.UNAUTHORIZED;
 import static org.restnext.core.http.Response.Status.UNSUPPORTED_MEDIA_TYPE;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -32,15 +33,19 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.internal.ThrowableUtil;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
 
 import org.restnext.core.http.MediaType;
+import org.restnext.core.http.Message;
 import org.restnext.core.http.Request;
+import org.restnext.core.http.RequestImpl;
 import org.restnext.core.http.Response;
 import org.restnext.core.url.UrlMatch;
 import org.restnext.route.Route;
@@ -70,7 +75,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     }
 
     // Create Request from FullHttpRequest
-    final Request request = Request.fromRequest(ctx, req);
+    final Request request = new RequestImpl(ctx, req);
     final String uri = request.getUri().toString();
     final URI baseUri = request.getBaseUri();
     final URI fullRequestUri = baseUri.resolve(uri);
@@ -120,7 +125,20 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   }
 
   private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
-    FullHttpResponse resp = response.getFullHttpResponse();
+    byte[] content = response.getContent();
+
+    // create netty response
+    FullHttpResponse resp = new DefaultFullHttpResponse(
+        fromVersion(response.getVersion()),
+        fromStatus(response.getStatus()),
+        content == null
+            ? Unpooled.buffer(0)
+            : Unpooled.wrappedBuffer(content));
+
+    // Copy the outbound response headers.
+    for (Map.Entry<String, List<String>> entries : response.getHeaders().entrySet()) {
+      resp.headers().add(entries.getKey(), entries.getValue());
+    }
 
     // Check and set keep alive header to decide
     // whether to close the connection or not.
@@ -170,6 +188,58 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
           false);
     }
     ctx.close();
+  }
+
+  private HttpVersion fromVersion(Message.Version version) {
+    switch (version) {
+      case HTTP_1_0: return HttpVersion.HTTP_1_0;
+      case HTTP_1_1: return HttpVersion.HTTP_1_1;
+      default: return HttpVersion.HTTP_1_1;
+    }
+  }
+
+  private HttpResponseStatus fromStatus(Response.Status status) {
+    switch (status) {
+      case OK: return HttpResponseStatus.OK;
+      case CREATED: return HttpResponseStatus.CREATED;
+      case ACCEPTED: return HttpResponseStatus.ACCEPTED;
+      case NO_CONTENT: return HttpResponseStatus.NO_CONTENT;
+      case RESET_CONTENT: return HttpResponseStatus.RESET_CONTENT;
+      case PARTIAL_CONTENT: return HttpResponseStatus.PARTIAL_CONTENT;
+      case MOVED_PERMANENTLY: return HttpResponseStatus.MOVED_PERMANENTLY;
+      case FOUND: return HttpResponseStatus.FOUND;
+      case SEE_OTHER: return HttpResponseStatus.SEE_OTHER;
+      case NOT_MODIFIED: return HttpResponseStatus.NOT_MODIFIED;
+      case USE_PROXY: return HttpResponseStatus.USE_PROXY;
+      case TEMPORARY_REDIRECT: return HttpResponseStatus.TEMPORARY_REDIRECT;
+      case BAD_REQUEST: return HttpResponseStatus.BAD_REQUEST;
+      case UNAUTHORIZED: return HttpResponseStatus.UNAUTHORIZED;
+      case PAYMENT_REQUIRED: return HttpResponseStatus.PAYMENT_REQUIRED;
+      case FORBIDDEN: return HttpResponseStatus.FORBIDDEN;
+      case NOT_FOUND: return HttpResponseStatus.NOT_FOUND;
+      case METHOD_NOT_ALLOWED: return HttpResponseStatus.METHOD_NOT_ALLOWED;
+      case NOT_ACCEPTABLE: return HttpResponseStatus.NOT_ACCEPTABLE;
+      case PROXY_AUTHENTICATION_REQUIRED: return HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
+      case REQUEST_TIMEOUT: return HttpResponseStatus.REQUEST_TIMEOUT;
+      case CONFLICT: return HttpResponseStatus.CONFLICT;
+      case GONE: return HttpResponseStatus.GONE;
+      case LENGTH_REQUIRED: return HttpResponseStatus.LENGTH_REQUIRED;
+      case PRECONDITION_FAILED: return HttpResponseStatus.PRECONDITION_FAILED;
+      case REQUEST_ENTITY_TOO_LARGE: return HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE;
+      case REQUEST_URI_TOO_LONG: return HttpResponseStatus.REQUEST_URI_TOO_LONG;
+      case UNSUPPORTED_MEDIA_TYPE: return HttpResponseStatus.UNSUPPORTED_MEDIA_TYPE;
+      case REQUESTED_RANGE_NOT_SATISFIABLE:
+        return HttpResponseStatus.REQUESTED_RANGE_NOT_SATISFIABLE;
+      case EXPECTATION_FAILED: return HttpResponseStatus.EXPECTATION_FAILED;
+      case INTERNAL_SERVER_ERROR: return HttpResponseStatus.INTERNAL_SERVER_ERROR;
+      case NOT_IMPLEMENTED: return HttpResponseStatus.NOT_IMPLEMENTED;
+      case BAD_GATEWAY: return HttpResponseStatus.BAD_GATEWAY;
+      case SERVICE_UNAVAILABLE: return HttpResponseStatus.SERVICE_UNAVAILABLE;
+      case GATEWAY_TIMEOUT: return HttpResponseStatus.GATEWAY_TIMEOUT;
+      case HTTP_VERSION_NOT_SUPPORTED: return HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED;
+      case CONTINUE: return HttpResponseStatus.CONTINUE;
+      default: throw new RuntimeException(String.format("Status: %s not supported", status));
+    }
   }
 
 }

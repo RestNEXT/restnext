@@ -28,12 +28,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.LAST_MODIFIED;
 import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
 import static io.netty.handler.codec.http.HttpHeaderNames.SERVER;
 
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DateFormatter;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.util.AsciiString;
 import io.netty.util.CharsetUtil;
 
@@ -42,9 +37,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,23 +47,16 @@ import java.util.stream.Stream;
  */
 final class ResponseImpl implements Response {
 
-  private final FullHttpResponse response;
   private final Version version;
   private final Status status;
   private final byte[] content;
   private final MultivaluedMap<String, String> headers;
 
   private ResponseImpl(final Builder builder) {
-    this.response = builder.response;
     this.version = builder.version;
     this.status = builder.status;
     this.content = builder.content;
-
-    // copy the outbound netty response headers.
-    this.headers = new MultivaluedHashMap<>();
-    for (Map.Entry<String, String> entry : response.headers()) {
-      this.headers.add(entry.getKey(), entry.getValue());
-    }
+    this.headers = builder.headers;
   }
 
   @Override
@@ -86,11 +72,6 @@ final class ResponseImpl implements Response {
   @Override
   public byte[] getContent() {
     return content;
-  }
-
-  @Override
-  public FullHttpResponse getFullHttpResponse() {
-    return response;
   }
 
   @Override
@@ -114,7 +95,7 @@ final class ResponseImpl implements Response {
     String header = getHeader(ALLOW);
     if (header != null) {
       return Stream.of(header.split(","))
-          .map(Request.Method::of)
+          .map(Request.Method::valueOf)
           .collect(Collectors.toSet());
     }
     return null;
@@ -145,38 +126,21 @@ final class ResponseImpl implements Response {
 
   public static final class Builder implements Response.Builder {
 
-    private final HttpHeaders headers = new DefaultHttpHeaders();
-    private FullHttpResponse response;
+    private MultivaluedMap<String, String> headers = new MultivaluedHashMap();
     private Version version = Version.HTTP_1_1;
     private Status status = Status.OK;
     private byte[] content;
 
     @Override
     public Response build() {
-      // Create the FullHttpResponse object.
-      this.response = new DefaultFullHttpResponse(
-          this.version.getNettyVersion(),
-          this.status.getNettyStatus(),
-          this.content == null
-              ? Unpooled.EMPTY_BUFFER
-              : Unpooled.wrappedBuffer(this.content));
-
-      // Set my mandatory Date header, if necessary.
-      if (this.headers.get(DATE) == null) {
+      // Set my mandatory Date header, if not exists.
+      if (headers.get(DATE) == null) {
         date(new Date());
       }
 
       // Adds some custom headers.
-      this.headers.set(SERVER, "RestNEXT");
-      this.headers.set("x-powered-by", "Netty");
-
-      // Set outbound headers in the response object.
-      for (String name : this.headers.names()) {
-        List<String> values = this.headers.getAll(name);
-        for (String value : values) {
-          this.response.headers().add(name, value);
-        }
-      }
+      headers.putSingle(SERVER.toString(), "RestNEXT");
+      headers.putSingle("x-powered-by", "Netty");
 
       // Create the response object.
       return new ResponseImpl(this);
@@ -312,14 +276,16 @@ final class ResponseImpl implements Response {
     }
 
     public Response.Builder header(CharSequence name, Object value, boolean combined) {
+      String headerName = name.toString();
+      String headerValue = String.valueOf(value);
       if (value != null) {
         if (combined) {
-          this.headers.add(name, value);
+          this.headers.add(headerName, headerValue);
         } else {
-          this.headers.set(name, value);
+          this.headers.putSingle(headerName, headerValue);
         }
       } else {
-        this.headers.remove(name);
+        this.headers.remove(headerName);
       }
       return this;
     }

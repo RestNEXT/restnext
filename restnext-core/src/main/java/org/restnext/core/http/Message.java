@@ -16,11 +16,6 @@
 
 package org.restnext.core.http;
 
-import io.netty.handler.codec.http.HttpVersion;
-
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Created by thiago on 06/09/16.
  */
@@ -29,39 +24,6 @@ public interface Message {
   Version getVersion();
 
   enum Version {
-
-    HTTP_1_0(HttpVersion.HTTP_1_0),
-    HTTP_1_1(HttpVersion.HTTP_1_1);
-
-    private final HttpVersion nettyVersion;
-
-    Version(HttpVersion nettyVersion) {
-      this.nettyVersion = nettyVersion;
-      Holder.MAP.put(nettyVersion, this);
-    }
-
-    public static Version of(HttpVersion version) {
-      return of(version, null);
-    }
-
-    public static Version of(HttpVersion version, Version def) {
-      if (version == null) {
-        return null;
-      }
-      return Holder.MAP.getOrDefault(version, def);
-    }
-
-    public HttpVersion getNettyVersion() {
-      return nettyVersion;
-    }
-
-    @Override
-    public String toString() {
-      return name();
-    }
-
-    private static class Holder {
-      static Map<HttpVersion, Version> MAP = new HashMap<>();
-    }
+    HTTP_1_0, HTTP_1_1
   }
 }
