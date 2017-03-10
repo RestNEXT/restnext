@@ -18,7 +18,7 @@ package org.restnext.server;
 
 import java.util.Optional;
 
-import org.restnext.core.http.codec.Response;
+import org.restnext.core.http.Response;
 
 /**
  * Created by thiago on 04/08/16.

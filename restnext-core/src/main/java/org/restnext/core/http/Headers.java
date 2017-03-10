@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import io.netty.util.AsciiString;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.restnext.core.http.MultivaluedMap;
 
 /**
  * Created by thiago on 06/09/16.
@@ -40,20 +38,8 @@ interface Headers {
     if (values.isEmpty()) {
       return "";
     }
-    return values.stream()
-        //.filter(v -> v != null && !v.isEmpty())
-        //.map(String::valueOf)
-        .collect(Collectors.joining(","));
-
-//    final Iterator<String> valuesIterator = values.iterator();
-//    StringBuilder buffer = new StringBuilder(valuesIterator.next());
-//    while (valuesIterator.hasNext()) {
-//        buffer.append(',').append(valuesIterator.next());
-//    }
-//    return buffer.toString();
+    return values.stream().collect(Collectors.joining(","));
   }
-
-  MultivaluedMap<String, String> getHeaders();
 
   default List<String> getAllHeader(AsciiString name) {
     return getAllHeader(name.toString());
@@ -62,4 +48,7 @@ interface Headers {
   default List<String> getAllHeader(String name) {
     return getHeaders().get(name);
   }
+
+  MultivaluedMap<String, String> getHeaders();
+
 }

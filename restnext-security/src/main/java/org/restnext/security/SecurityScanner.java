@@ -40,9 +40,9 @@ import java.util.function.Function;
 import javax.xml.bind.JAXBException;
 
 import org.restnext.core.classpath.ClasspathRegister;
-import org.restnext.core.http.codec.Request;
+import org.restnext.core.http.Request;
 import org.restnext.core.jaxb.Jaxb;
-import org.restnext.core.jaxb.internal.Securities;
+import org.restnext.security.jaxb.Securities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaCreationException;
@@ -74,7 +74,7 @@ public final class SecurityScanner {
   /**
    * Constructor with security and security directory path.
    *
-   * @param security the security
+   * @param security          the security
    * @param securityDirectory the security directory path
    */
   public SecurityScanner(final Security security, final Path securityDirectory) {
@@ -91,14 +91,6 @@ public final class SecurityScanner {
 
   // methods
 
-  public void scan() {
-    createLambda(listChildren(securityDirectory, "*.jar"));
-  }
-
-  void scan(final Path jar) {
-    createLambda(Collections.singleton(jar));
-  }
-
   private void createLambda(final Set<Path> jars) {
     final String classpath = SystemPropertyUtil.get("java.class.path");
     final StringJoiner compilationClassPathJoiner = new StringJoiner(":")
@@ -114,6 +106,14 @@ public final class SecurityScanner {
         .withImports(Request.class));
 
     jars.forEach(this::lookupSecurityFiles);
+  }
+
+  public void scan() {
+    createLambda(listChildren(securityDirectory, "*.jar"));
+  }
+
+  void scan(final Path jar) {
+    createLambda(Collections.singleton(jar));
   }
 
   void remove() {
@@ -182,7 +182,8 @@ public final class SecurityScanner {
           when the application starts.
         */
         Function<Request, Boolean> provider = lambdaFactory.createLambda(
-            security.getProvider(), new TypeReference<Function<Request, Boolean>>() {});
+            security.getProvider(), new TypeReference<Function<Request, Boolean>>() {
+            });
 
         // checks if already has registered a mapping for the uri.
         // To avoid creating unnecessary mapping objects.

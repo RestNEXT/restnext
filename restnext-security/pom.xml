@@ -36,6 +36,48 @@
       <groupId>pl.joegreen</groupId>
       <artifactId>lambda-from-string</artifactId>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jvnet.jaxb2.maven2</groupId>
+        <artifactId>maven-jaxb2-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>schemas</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <schemaDirectory>${project.basedir}/src/main/resources</schemaDirectory>
+          <schemaIncludes>
+            <include>security.xsd</include>
+          </schemaIncludes>
+          <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+          <generatePackage>org.restnext.security.jaxb</generatePackage>
+          <cleanPackageDirectories>true</cleanPackageDirectories>
+          <episodeFile>${project.basedir}/src/main/resources/META-INF/sun-jaxb.episode</episodeFile>
+          <noFileHeader>true</noFileHeader>
+          <enableIntrospection>true</enableIntrospection>
+          <markGenerated>false</markGenerated>
+          <packageLevelAnnotations>false</packageLevelAnnotations>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <specVersion>2.2</specVersion>
+          <args>
+            <!--<arg>-no-header</arg>-->
+            <!--<arg>-enableIntrospection</arg>-->
+            <arg>-npa</arg>
+          </args>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

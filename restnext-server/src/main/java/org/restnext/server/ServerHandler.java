@@ -16,12 +16,12 @@
 
 package org.restnext.server;
 
-import static org.restnext.core.http.codec.Response.Status.BAD_REQUEST;
-import static org.restnext.core.http.codec.Response.Status.INTERNAL_SERVER_ERROR;
-import static org.restnext.core.http.codec.Response.Status.METHOD_NOT_ALLOWED;
-import static org.restnext.core.http.codec.Response.Status.NOT_FOUND;
-import static org.restnext.core.http.codec.Response.Status.UNAUTHORIZED;
-import static org.restnext.core.http.codec.Response.Status.UNSUPPORTED_MEDIA_TYPE;
+import static org.restnext.core.http.Response.Status.BAD_REQUEST;
+import static org.restnext.core.http.Response.Status.INTERNAL_SERVER_ERROR;
+import static org.restnext.core.http.Response.Status.METHOD_NOT_ALLOWED;
+import static org.restnext.core.http.Response.Status.NOT_FOUND;
+import static org.restnext.core.http.Response.Status.UNAUTHORIZED;
+import static org.restnext.core.http.Response.Status.UNSUPPORTED_MEDIA_TYPE;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
@@ -40,9 +40,9 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import org.restnext.core.http.MediaType;
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.codec.Response;
-import org.restnext.core.http.url.UrlMatch;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
+import org.restnext.core.url.UrlMatch;
 import org.restnext.route.Route;
 import org.restnext.security.Security;
 

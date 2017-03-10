@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.DATE;
@@ -49,11 +49,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.MultivaluedHashMap;
-import org.restnext.core.http.MultivaluedMap;
-
 /**
  * Created by thiago on 24/08/16.
  */
@@ -67,9 +62,15 @@ final class RequestImpl implements Request {
   private final boolean keepAlive;
   private final MultivaluedMap<String, String> headers;
   private final MultivaluedMap<String, String> parameters;
-  private byte[] content;
   private final Charset charset;
+  private byte[] content;
 
+  /**
+   * Create a new instance.
+   *
+   * @param context netty channel handler context
+   * @param request netty full http request
+   */
   RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
@@ -140,15 +141,12 @@ final class RequestImpl implements Request {
   }
 
   private URI createBaseUri(ChannelHandlerContext ctx, FullHttpRequest req) {
-    //final String reqUri = req.uri();
-    //final String basePath = reqUri.split("/")[reqUri.indexOf('/') + 1];
     final String protocol = req.protocolVersion().protocolName().toLowerCase();
     String host = req.headers().get(HttpHeaderNames.HOST);
     if (host == null) {
       InetSocketAddress address = (InetSocketAddress) ctx.channel().localAddress();
       host = address.getHostName() + ":" + address.getPort();
     }
-    //return URI.create(String.format("%s://%s/%s/", protocol, host, basePath));
     return URI.create(String.format("%s://%s/", protocol, host));
   }
 

@@ -25,10 +25,10 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.url.UrlMatcher;
-import org.restnext.core.http.url.UrlPattern;
-import org.restnext.core.http.url.UrlRegex;
+import org.restnext.core.http.Request;
+import org.restnext.core.url.UrlMatcher;
+import org.restnext.core.url.UrlPattern;
+import org.restnext.core.url.UrlRegex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +60,21 @@ public enum Security {
   }
 
   /**
+   * Get a security mapping from provided uri.
+   *
+   * @param uri the uri
+   * @return the security mapping
+   */
+  public Security.Mapping getSecurityMapping(final String uri) {
+    for (Security.Mapping securityMapping : registry.values()) {
+      if (securityMapping.getUrlMatcher().matches(uri)) {
+        return securityMapping;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Register a security mapping.
    *
    * @param securityMapping the security mapping
@@ -82,6 +97,8 @@ public enum Security {
     unregister(mapping.getUri());
   }
 
+  // convenient static methods
+
   /**
    * Unregister a uri.
    *
@@ -93,23 +110,6 @@ public enum Security {
       registry.remove(uri);
       LOGGER.debug("The security uri {} was unregistered", uri);
     }
-  }
-
-  // convenient static methods
-
-  /**
-   * Get a security mapping from provided uri.
-   *
-   * @param uri the uri
-   * @return the security mapping
-   */
-  public Security.Mapping getSecurityMapping(final String uri) {
-    for (Security.Mapping securityMapping : registry.values()) {
-      if (securityMapping.getUrlMatcher().matches(uri)) {
-        return securityMapping;
-      }
-    }
-    return null;
   }
 
   // inner mapping class
@@ -167,7 +167,7 @@ public enum Security {
       /**
        * Constructor with uri and provider function.
        *
-       * @param uri the uri
+       * @param uri      the uri
        * @param provider the provider function
        */
       public Builder(final String uri, final Function<Request, Boolean> provider) {

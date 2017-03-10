@@ -1,5 +1,5 @@
 
-package org.restnext.core.jaxb.internal;
+package org.restnext.security.jaxb;
 
 import javax.xml.bind.annotation.XmlRegistry;
 
@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlRegistry;
 /**
  * This object contains factory methods for each 
  * Java content interface and Java element interface 
- * generated in the org.restnext.core.jaxb.internal package. 
+ * generated in the org.restnext.security.jaxb package. 
  * <p>An ObjectFactory allows you to programatically 
  * construct new instances of the Java representation 
  * for XML content. The Java representation of XML 
@@ -23,18 +23,10 @@ public class ObjectFactory {
 
 
     /**
-     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: org.restnext.core.jaxb.internal
+     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: org.restnext.security.jaxb
      * 
      */
     public ObjectFactory() {
-    }
-
-    /**
-     * Create an instance of {@link Routes }
-     * 
-     */
-    public Routes createRoutes() {
-        return new Routes();
     }
 
     /**
@@ -46,35 +38,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Routes.Route }
-     * 
-     */
-    public Routes.Route createRoutesRoute() {
-        return new Routes.Route();
-    }
-
-    /**
      * Create an instance of {@link Securities.Security }
      * 
      */
     public Securities.Security createSecuritiesSecurity() {
         return new Securities.Security();
-    }
-
-    /**
-     * Create an instance of {@link Routes.Route.Methods }
-     * 
-     */
-    public Routes.Route.Methods createRoutesRouteMethods() {
-        return new Routes.Route.Methods();
-    }
-
-    /**
-     * Create an instance of {@link Routes.Route.Medias }
-     * 
-     */
-    public Routes.Route.Medias createRoutesRouteMedias() {
-        return new Routes.Route.Medias();
     }
 
 }

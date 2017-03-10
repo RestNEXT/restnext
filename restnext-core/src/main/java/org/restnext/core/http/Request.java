@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -26,15 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.MultivaluedMap;
-
 public interface Request extends Message, Headers {
-
-  static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
-    return new RequestImpl(ctx, request);
-  }
 
   FullHttpRequest getFullHttpRequest();
 
@@ -66,15 +58,11 @@ public interface Request extends Message, Headers {
 
   Response.Builder evaluatePreconditions(Date lastModified, EntityTag entityTag);
 
-  //============================
-  //     STATIC METHODS
-  //============================
-
   Response.Builder evaluatePreconditions();
 
-  //============================
-  //     HTTP METHOD
-  //============================
+  static Request fromRequest(ChannelHandlerContext ctx, FullHttpRequest request) {
+    return new RequestImpl(ctx, request);
+  }
 
   enum Method {
 

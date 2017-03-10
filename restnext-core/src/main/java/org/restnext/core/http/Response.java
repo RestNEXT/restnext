@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -26,68 +26,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-
 public interface Response extends Message, Headers {
-
-  Status getStatus();
-
-  byte[] getContent();
-
-  static Response.Builder status(Status status) {
-    return new ResponseImpl.Builder().status(status);
-  }
 
   static Response.Builder status(int status) {
     return status(Status.fromStatusCode(status));
   }
 
-  /**
-   * Create response from {@link FullHttpResponse}.
-   *
-   * @param response Netty full http response
-   * @return response builder
-   */
-  static Response.Builder fromResponse(FullHttpResponse response) {
-    Objects.requireNonNull(response, "response must not be null");
-
-    Response.Builder builder = status(Status.fromStatus(response.status()));
-    builder.version(Version.of(response.protocolVersion()));
-    builder.content(response.content().array());
-
-    for (String name : response.headers().names()) {
-      for (String value : response.headers().getAll(name)) {
-        builder.addHeader(name, value);
-      }
-    }
-
-    return builder;
-  }
-
-  /**
-   * Create response from {@link Response}.
-   *
-   * @param response response
-   * @return response builder
-   */
-  static Response.Builder fromResponse(Response response) {
-    Objects.requireNonNull(response, "response must not be null");
-
-    Response.Builder builder = status(response.getStatus());
-    builder.version(response.getVersion());
-    builder.content(response.getContent());
-
-    for (String name : response.getHeaders().keySet()) {
-      for (String value : response.getHeaders().get(name)) {
-        builder.addHeader(name, value);
-      }
-    }
-
-    return builder;
+  static Response.Builder status(Status status) {
+    return new ResponseImpl.Builder().status(status);
   }
 
   static Response.Builder ok(byte[] content, String type) {
@@ -106,25 +54,13 @@ public interface Response extends Message, Headers {
     return status(Status.OK);
   }
 
-  //============================
-  //        HTTP STATUS
-  //============================
-
   static Response.Builder ok(MediaType type) {
     return ok().type(type);
   }
 
-  //============================
-  //          BUILDER
-  //============================
-
   static Response.Builder ok(String content) {
     return ok(content, StandardCharsets.UTF_8);
   }
-
-  //============================
-  //     STATIC METHODS
-  //============================
 
   static Response.Builder ok(String content, Charset charset) {
     return ok(content, charset, MediaType.TEXT_UTF8);
@@ -181,6 +117,10 @@ public interface Response extends Message, Headers {
   static Response.Builder redirect(URI location) {
     return status(Status.FOUND).location(location);
   }
+
+  Status getStatus();
+
+  byte[] getContent();
 
   FullHttpResponse getFullHttpResponse();
 
@@ -242,6 +182,7 @@ public interface Response extends Message, Headers {
     private final String reason;
     private final Family family;
     private final HttpResponseStatus nettyStatus;
+
     Status(final HttpResponseStatus status) {
       Holder.MAP.put(status, this);
       this.nettyStatus = status;
@@ -359,4 +300,5 @@ public interface Response extends Message, Headers {
 
     Response.Builder contentLocation(URI location);
   }
+
 }

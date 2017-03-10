@@ -1,5 +1,5 @@
 
-package org.restnext.core.jaxb.internal;
+package org.restnext.route.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;

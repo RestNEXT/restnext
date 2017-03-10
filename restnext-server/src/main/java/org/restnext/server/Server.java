@@ -17,7 +17,9 @@
 package org.restnext.server;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -55,17 +57,12 @@ public final class Server {
   private EventLoopGroup bossGroup;
   private EventLoopGroup workerGroup;
 
-  public Server(final ServerInitializer serverInitializer) {
-    this(true, serverInitializer);
-  }
-
   /**
    * Constructor with auto start flag and the server initializer.
    *
-   * @param autoStart true to automatic start the server
    * @param serverInitializer the server initializer
    */
-  public Server(final boolean autoStart, final ServerInitializer serverInitializer) {
+  public Server(final ServerInitializer serverInitializer) {
     Objects.requireNonNull(serverInitializer, "Server initializer must not be null");
     this.serverInitializer = serverInitializer;
     Runtime.getRuntime().addShutdownHook(new Thread("server-hook") {
@@ -75,9 +72,6 @@ public final class Server {
         Server.this.stop();
       }
     });
-    if (autoStart) {
-      start();
-    }
   }
 
   /**
@@ -87,17 +81,23 @@ public final class Server {
     loadAndPrintBanner();
     try {
       InetSocketAddress bindAddress = serverInitializer.getBindAddress();
+
       ServerBootstrap serverBootstrap = Epoll.isAvailable()
           ? newEpoolServerBootstrap()
           : newNioServerBootstrap();
+
       ChannelFuture channelFuture = serverBootstrap
           //.handler(new LoggingHandler(LogLevel.INFO))
           .childHandler(serverInitializer)
+          .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .bind(bindAddress)
           .sync();
+
       LOGGER.info("Application is running at - {}://{}",
           (serverInitializer.isSslConfigured() ? "https" : "http"), bindAddress);
+
       channelFuture.channel().closeFuture().sync();
+
     } catch (Exception e) {
       throw new ServerException("Could not start the server", e);
     } finally {
@@ -164,7 +164,7 @@ public final class Server {
         final Properties props = new Properties();
         ClassLoader classLoader = Server.class.getClassLoader();
         try (InputStream mavenProps = classLoader.getResourceAsStream(
-                     "META-INF/maven/org.restnext/restnext-server/pom.properties")) {
+            "META-INF/maven/org.restnext/restnext-server/pom.properties")) {
           if (mavenProps != null) {
             props.load(mavenProps);
           }

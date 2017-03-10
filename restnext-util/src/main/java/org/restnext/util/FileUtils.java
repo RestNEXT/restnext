@@ -51,7 +51,7 @@ public final class FileUtils {
    * List children path from the provided directory and the glob filter.
    *
    * @param directory the directory
-   * @param glob the glob filter
+   * @param glob      the glob filter
    * @return a set of found path children
    */
   public static Set<Path> listChildren(Path directory, String glob) {
@@ -76,7 +76,7 @@ public final class FileUtils {
    * Deep list children path from the provided directory and the glob filter.
    *
    * @param directory the directory
-   * @param glob the glob filter
+   * @param glob      the glob filter
    * @return a set of found path children
    */
   public static Set<Path> deepListChildren(final Path directory, String glob) {
@@ -95,7 +95,7 @@ public final class FileUtils {
           }
         }
         : (path, basicFileAttributes) -> /*basicFileAttributes.isRegularFile() &&*/
-          pathMatcher.matches(path.getFileName());
+        pathMatcher.matches(path.getFileName());
     try {
       Set<Path> children = Files.find(directory, Integer.MAX_VALUE, filter)
           .collect(Collectors.toSet());

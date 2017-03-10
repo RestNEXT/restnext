@@ -157,7 +157,7 @@
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <linkXRef>false</linkXRef>
-            <excludes>**/org/restnext/core/jaxb/internal/**</excludes>
+            <excludes>**/jaxb/**</excludes>
           </configuration>
           <dependencies>
             <dependency>

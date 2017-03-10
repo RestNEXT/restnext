@@ -30,7 +30,10 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
@@ -38,8 +41,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
 
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.codec.Response;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
 import org.restnext.route.Route;
 import org.restnext.route.RouteScanner;
 import org.restnext.security.Security;
@@ -144,10 +147,13 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
   public static final class Builder {
 
+    public static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
+        new ServerSelfSignedCertificate();
+
     private int maxContentLength = 64 * 1024;
     private Timeout timeout = new Timeout();
     private CorsConfig corsConfig /*= getCorsConfig()*/;
-    private SslContext sslContext /*= getSslContext()*/;
+    private SslContext sslContext;
     private InetSocketAddress bindAddress = new InetSocketAddress(8080);
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
@@ -170,9 +176,26 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       return this;
     }
 
+    public Builder ssl() {
+      return ssl(DEFAULT_SERVER_CERTIFICATE);
+    }
+
+    public Builder ssl(ServerCertificate certificate) {
+      return ssl(createSslContext(certificate));
+    }
+
     public Builder ssl(SslContext sslContext) {
       this.sslContext = sslContext;
       return this;
+    }
+
+    private SslContext createSslContext(ServerCertificate serverCertificate) {
+      try {
+        return SslContextBuilder.forServer(serverCertificate.getCertificate(),
+            serverCertificate.getPrivateKey()).build();
+      } catch (SSLException ignore) {
+        return null;
+      }
     }
 
     public Builder secure(String uri, Function<Request, Boolean> provider) {
@@ -238,24 +261,15 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       return new ServerInitializer(this);
     }
 
+    // convenient methods
+
     public Builder route(String uri, Function<Request, Response> provider) {
       return routes(Route.Mapping.uri(uri, provider).build());
     }
 
-    // convenient methods
-
     public final Builder routes(Route.Mapping... routeMapping) {
       Arrays.asList(routeMapping).forEach(Route.INSTANCE::register);
       return this;
-    }
-
-    private SslContext getSslContext() {
-      try {
-        SelfSignedCertificate ssc = new SelfSignedCertificate("restnext.org");
-        return SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
-      } catch (CertificateException | SSLException ignore) {
-        return null;
-      }
     }
 
     private CorsConfig getCorsConfig() {
@@ -264,5 +278,48 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
           .allowCredentials()
           .build();
     }
+
+    private static class ServerSelfSignedCertificate implements ServerCertificate {
+
+      static final String DEFAULT_FQND = "restnext.org";
+
+      private SelfSignedCertificate certificate;
+
+      public ServerSelfSignedCertificate() {
+        this(DEFAULT_FQND);
+      }
+
+      /**
+       * Creates a new instance.
+       *
+       * @param fqdn a fully qualified domain name
+       */
+      public ServerSelfSignedCertificate(String fqdn) {
+        try {
+          certificate = new SelfSignedCertificate(fqdn);
+        } catch (CertificateException ignore) {
+          // nop
+        }
+      }
+
+      @Override
+      public InputStream getCertificate() {
+        try {
+          return Files.newInputStream(certificate.certificate().toPath());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+
+      @Override
+      public InputStream getPrivateKey() {
+        try {
+          return Files.newInputStream(certificate.privateKey().toPath());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+
   }
 }

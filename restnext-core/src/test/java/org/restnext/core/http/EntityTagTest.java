@@ -32,14 +32,14 @@ public class EntityTagTest {
   @Test
   public void toStringWeakTest() {
     assertEquals(new EntityTag(
-        "Hello \"World\"", true).toString(),
+            "Hello \"World\"", true).toString(),
         "W/\"Hello \\\"World\\\"\"");
   }
 
   @Test
   public void toStringStrongTest() {
     assertEquals(new EntityTag(
-        "Hello \"World\"").toString(),
+            "Hello \"World\"").toString(),
         "\"Hello \\\"World\\\"\"");
   }
 

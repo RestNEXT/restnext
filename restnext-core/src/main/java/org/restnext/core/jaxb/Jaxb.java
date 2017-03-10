@@ -58,7 +58,7 @@ public final class Jaxb {
    * Constructor with schema and bind classes.
    *
    * @param schemaXml schemaXml
-   * @param classes classes
+   * @param classes   classes
    */
   public Jaxb(String schemaXml, Class<?>... classes) {
     try {
@@ -107,7 +107,7 @@ public final class Jaxb {
    * Serialize the jaxb object to String Xml.
    *
    * @param object jaxb object
-   * @param props jaxb marshal map properties
+   * @param props  jaxb marshal map properties
    * @return string xml
    * @throws JAXBException if something goes wrong
    */
@@ -125,9 +125,9 @@ public final class Jaxb {
   /**
    * Deserialize string xml into a jaxb object.
    *
-   * @param xml string xml
+   * @param xml         string xml
    * @param returnClass jaxb object class
-   * @param <T> jaxb object type
+   * @param <T>         jaxb object type
    * @return jaxb object
    * @throws JAXBException if something goes wrong
    */
@@ -144,9 +144,9 @@ public final class Jaxb {
   /**
    * Deserialize xml file into a jaxb object.
    *
-   * @param xml xml file
+   * @param xml         xml file
    * @param returnClass jaxb object class
-   * @param <T> jaxb object type
+   * @param <T>         jaxb object type
    * @return jaxb object
    * @throws JAXBException if something goes wrong
    */
@@ -200,4 +200,5 @@ public final class Jaxb {
     //    }
     //}
   }
+
 }

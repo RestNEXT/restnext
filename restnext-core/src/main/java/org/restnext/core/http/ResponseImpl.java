@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.ALLOW;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_ENCODING;
@@ -48,11 +48,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.MultivaluedHashMap;
-import org.restnext.core.http.MultivaluedMap;
 
 /**
  * Created by thiago on 24/08/16.
@@ -122,12 +117,6 @@ final class ResponseImpl implements Response {
           .map(Request.Method::of)
           .collect(Collectors.toSet());
     }
-    //List<String> allowedMethods = getAllHeader(ALLOW);
-    //if (allowedMethods != null) {
-    //    return allowedMethods.stream()
-    //            .map(Request.Method::of)
-    //            .collect(Collectors.toSet());
-    //}
     return null;
   }
 
@@ -154,13 +143,9 @@ final class ResponseImpl implements Response {
     return headers;
   }
 
-  //============================
-  //          BUILDER
-  //============================
-
   public static final class Builder implements Response.Builder {
 
-    private final HttpHeaders headers = new DefaultHttpHeaders(true);
+    private final HttpHeaders headers = new DefaultHttpHeaders();
     private FullHttpResponse response;
     private Version version = Version.HTTP_1_1;
     private Status status = Status.OK;
@@ -251,22 +236,22 @@ final class ResponseImpl implements Response {
       return setHeader(CONTENT_ENCODING, encoding);
     }
 
+    public Response.Builder setHeader(AsciiString name, Object value) {
+      return setHeader(name.toString(), value);
+    }
+
     @Override
     public Response.Builder setHeader(CharSequence name, Object value) {
       return header(name, value, false);
     }
 
-    public Response.Builder setHeader(AsciiString name, Object value) {
-      return header(name.toString(), value, false);
+    public Response.Builder addHeader(AsciiString name, Object value) {
+      return addHeader(name.toString(), value);
     }
 
     @Override
     public Response.Builder addHeader(CharSequence name, Object value) {
       return header(name, value, true);
-    }
-
-    public Response.Builder addHeader(AsciiString name, Object value) {
-      return header(name.toString(), value, true);
     }
 
     @Override
@@ -339,4 +324,5 @@ final class ResponseImpl implements Response {
       return this;
     }
   }
+
 }

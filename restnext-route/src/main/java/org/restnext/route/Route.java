@@ -28,11 +28,11 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 import org.restnext.core.http.MediaType;
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.codec.Response;
-import org.restnext.core.http.url.UrlMatcher;
-import org.restnext.core.http.url.UrlPattern;
-import org.restnext.core.http.url.UrlRegex;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
+import org.restnext.core.url.UrlMatcher;
+import org.restnext.core.url.UrlPattern;
+import org.restnext.core.url.UrlRegex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,7 +174,7 @@ public enum Route {
       /**
        * Constructor with uri and provided function.
        *
-       * @param uri the uri
+       * @param uri      the uri
        * @param provider the provider function
        */
       public Builder(final String uri, final Function<Request, Response> provider) {

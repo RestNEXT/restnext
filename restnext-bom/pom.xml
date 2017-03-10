@@ -101,7 +101,7 @@
 
   <properties>
     <restnext.version>0.2.1-SNAPSHOT</restnext.version>
-    <netty.version>4.1.8.Final</netty.version>
+    <netty.version>4.1.9.Final</netty.version>
     <javassist.version>3.21.0-GA</javassist.version>
     <lambda-string.version>1.4</lambda-string.version>
     <slf4j.version>1.7.24</slf4j.version>

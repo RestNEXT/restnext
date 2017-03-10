@@ -41,10 +41,10 @@ import javax.xml.bind.JAXBException;
 
 import org.restnext.core.classpath.ClasspathRegister;
 import org.restnext.core.http.MediaType;
-import org.restnext.core.http.codec.Request;
-import org.restnext.core.http.codec.Response;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
 import org.restnext.core.jaxb.Jaxb;
-import org.restnext.core.jaxb.internal.Routes;
+import org.restnext.route.jaxb.Routes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaCreationException;
@@ -76,7 +76,7 @@ public final class RouteScanner {
   /**
    * Constructor with route and route directory path.
    *
-   * @param route the route
+   * @param route          the route
    * @param routeDirectory the route directory path
    */
   public RouteScanner(final Route route, final Path routeDirectory) {
@@ -92,14 +92,6 @@ public final class RouteScanner {
   }
 
   // methods
-
-  public void scan() {
-    createLambda(listChildren(routeDirectory, "*.jar"));
-  }
-
-  void scan(final Path jar) {
-    createLambda(Collections.singleton(jar));
-  }
 
   private void createLambda(final Set<Path> jars) {
     String classpath = SystemPropertyUtil.get("java.class.path");
@@ -117,6 +109,14 @@ public final class RouteScanner {
         .withImports(Response.class));
 
     jars.forEach(this::lookupRouteFiles);
+  }
+
+  public void scan() {
+    createLambda(listChildren(routeDirectory, "*.jar"));
+  }
+
+  void scan(final Path jar) {
+    createLambda(Collections.singleton(jar));
   }
 
   void remove() {
@@ -191,7 +191,8 @@ public final class RouteScanner {
           process when the application starts.
         */
         Function<Request, Response> provider = lambdaFactory.createLambda(
-            route.getProvider(), new TypeReference<Function<Request, Response>>() {});
+            route.getProvider(), new TypeReference<Function<Request, Response>>() {
+            });
 
         // checks if already has registered a mapping for the uri.
         // To avoid creating unnecessary mapping objects.

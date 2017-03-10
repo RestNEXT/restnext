@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package org.restnext.core.http.url;
+package org.restnext.core.url;
 
 import java.util.Collections;
 import java.util.HashMap;

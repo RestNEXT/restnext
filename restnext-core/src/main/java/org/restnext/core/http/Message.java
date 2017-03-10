@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http.codec;
+package org.restnext.core.http;
 
 import io.netty.handler.codec.http.HttpVersion;
 
@@ -27,10 +27,6 @@ import java.util.Map;
 public interface Message {
 
   Version getVersion();
-
-  //============================
-  //        HTTP VERSION
-  //============================
 
   enum Version {
 

@@ -1,13 +1,7 @@
-
 package org.restnext.core.classpath;
 
-import static org.junit.Assert.assertTrue;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
 
 /**
  * Created by thiago on 25/11/16.
