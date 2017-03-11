@@ -92,7 +92,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     // Get registered route mapping for the request uri, otherwise return 404 - Not Found  response.
     Route.Mapping routeMapping = Optional.ofNullable(Route.INSTANCE.getRouteMapping(uri))
         .filter(Route.Mapping::isEnable)
-        .filter(_routeMapping -> _routeMapping.getRouteProvider() != null)
+        .filter(mapping -> mapping.getRouteProvider() != null)
         .orElseThrow(() -> new ServerException(String.format(
             "Route mapping not found for the method %s and uri %s", method, fullRequestUri),
             NOT_FOUND));
@@ -125,15 +125,13 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   }
 
   private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
-    byte[] content = response.getContent();
-
     // create netty response
     FullHttpResponse resp = new DefaultFullHttpResponse(
         fromVersion(response.getVersion()),
         fromStatus(response.getStatus()),
-        content == null
-            ? Unpooled.buffer(0)
-            : Unpooled.wrappedBuffer(content));
+        response.hasContent()
+            ? Unpooled.wrappedBuffer(response.getContent())
+            : Unpooled.buffer(0));
 
     // Copy the outbound response headers.
     for (Map.Entry<String, List<String>> entries : response.getHeaders().entrySet()) {

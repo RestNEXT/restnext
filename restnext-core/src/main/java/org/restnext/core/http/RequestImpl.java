@@ -38,12 +38,12 @@ import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.util.AsciiString;
-import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public final class RequestImpl implements Request {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
 
-    this.charset = HttpUtil.getCharset(request, CharsetUtil.UTF_8);
+    this.charset = HttpUtil.getCharset(request, StandardCharsets.UTF_8);
     this.version = HttpVersion.HTTP_1_0.equals(request.protocolVersion())
         ? Version.HTTP_1_0
         : Version.HTTP_1_1;
