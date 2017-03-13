@@ -29,6 +29,8 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +39,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
@@ -58,13 +62,25 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
   private final CorsConfig corsConfig;
   private final int maxContentLength;
   private final InetSocketAddress bindAddress;
+  private final EventExecutorGroup group;
 
   private ServerInitializer(final Builder builder) {
+    this(builder, true);
+  }
+
+  private ServerInitializer(final Builder builder, final boolean daemon) {
     this.sslCtx = builder.sslContext;
     this.corsConfig = builder.corsConfig;
     this.maxContentLength = builder.maxContentLength;
     this.bindAddress = builder.bindAddress;
     this.timeout = builder.timeout;
+
+    ThreadFactory threadFactory = daemon
+        ? new DaemonThreadFactory(Executors.defaultThreadFactory())
+        : Executors.defaultThreadFactory();
+    this.group = new DefaultEventExecutorGroup(
+        Runtime.getRuntime().availableProcessors() * 2,
+        threadFactory);
   }
 
   public static Builder route(String uri, Function<Request, Response> provider) {
@@ -96,7 +112,11 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     if (timeout != null) {
       pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
     }
-    pipeline.addLast("handler", ServerHandler.INSTANCE);
+    // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
+    // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
+    // If your business logic is fully asynchronous or finished very quickly, you don't need to
+    // specify a group.
+    pipeline.addLast(group, "handler", ServerHandler.INSTANCE);
   }
 
   public CorsConfig getCorsConfig() {
@@ -140,6 +160,23 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     Timeout(long amount, TimeUnit unit) {
       this.amount = amount;
       this.unit = unit;
+    }
+  }
+
+  static class DaemonThreadFactory implements ThreadFactory {
+    private final ThreadFactory threadFactory;
+
+    DaemonThreadFactory(ThreadFactory threadFactory) {
+      this.threadFactory = threadFactory;
+    }
+
+    @Override
+    public Thread newThread(Runnable r) {
+      Thread thread = threadFactory.newThread(r);
+      if (thread != null) {
+        thread.setDaemon(true);
+      }
+      return thread;
     }
   }
 
@@ -257,7 +294,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
      */
     public ServerInitializer build() {
       // register default health check route.
-      route("/ping", request -> Response.ok("pong").build());
+      route("/ping", request -> ServerResponse.ok("pong").build());
       return new ServerInitializer(this);
     }
 

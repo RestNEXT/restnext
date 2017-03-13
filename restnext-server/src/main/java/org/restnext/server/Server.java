@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public final class Server {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+
   private final ServerInitializer serverInitializer;
   private EventLoopGroup bossGroup;
   private EventLoopGroup workerGroup;

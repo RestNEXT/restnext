@@ -19,8 +19,6 @@ package org.restnext.route;
 import static org.restnext.util.FileUtils.deepListChildren;
 import static org.restnext.util.FileUtils.listChildren;
 
-import io.netty.util.internal.SystemPropertyUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -45,6 +43,7 @@ import org.restnext.core.http.Request;
 import org.restnext.core.http.Response;
 import org.restnext.core.jaxb.Jaxb;
 import org.restnext.route.jaxb.Routes;
+import org.restnext.util.SystemPropertyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaCreationException;

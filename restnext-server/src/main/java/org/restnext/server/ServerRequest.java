@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http;
+package org.restnext.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.DATE;
@@ -50,10 +50,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.restnext.core.http.EntityTag;
+import org.restnext.core.http.MediaType;
+import org.restnext.core.http.MultivaluedHashMap;
+import org.restnext.core.http.MultivaluedMap;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
+
 /**
  * Created by thiago on 24/08/16.
  */
-public final class RequestImpl implements Request {
+final class ServerRequest implements Request {
 
   private final Version version;
   private final Method method;
@@ -71,7 +78,7 @@ public final class RequestImpl implements Request {
    * @param context netty channel handler context
    * @param request netty full http request
    */
-  public RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
+  ServerRequest(final ChannelHandlerContext context, final FullHttpRequest request) {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
 
@@ -297,7 +304,7 @@ public final class RequestImpl implements Request {
     }
     // Since the resource does not exist the method must not be
     // perform and 412 Precondition Failed is returned
-    return Response.status(Response.Status.PRECONDITION_FAILED);
+    return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
   }
 
   private Response.Builder evaluateIfUnmodifiedSince(long lastModifiedTime) {
@@ -307,7 +314,7 @@ public final class RequestImpl implements Request {
       long ifUnmodifiedSince = DateFormatter.parseHttpDate(ifUnmodifiedSinceHeader).getTime();
       if (roundDown(lastModifiedTime) > ifUnmodifiedSince) {
         // 412 Precondition Failed
-        return Response.status(Response.Status.PRECONDITION_FAILED);
+        return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
       }
     }
     return null;
@@ -329,7 +336,7 @@ public final class RequestImpl implements Request {
     final long ifModifiedSince = DateFormatter.parseHttpDate(ifModifiedSinceHeader).getTime();
     if (roundDown(lastModifiedTime) <= ifModifiedSince) {
       // 304 Not modified
-      return Response.notModified();
+      return ServerResponse.notModified();
     }
     return null;
   }
@@ -344,14 +351,14 @@ public final class RequestImpl implements Request {
     // tags. Thus if the entity tag of the entity is weak then matching
     // of entity tags in the If-Match header should fail.
     if (entityTag.isWeak()) {
-      return Response.status(Response.Status.PRECONDITION_FAILED);
+      return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
     }
 
     EntityTag matchingTag = getIfMatch();
 
     if (matchingTag != null && matchingTag != EntityTag.ANY_MATCH
         && !matchingTag.equals(entityTag)) {
-      return Response.status(Response.Status.PRECONDITION_FAILED);
+      return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
     }
     return null;
   }
@@ -372,7 +379,7 @@ public final class RequestImpl implements Request {
       if (EntityTag.ANY_MATCH.equals(matchingTag) || matchingTag.equals(entityTag)
           || matchingTag.equals(new EntityTag(entityTag.getValue(), !entityTag.isWeak()))) {
         // 304 Not Modified
-        return Response.notModified(entityTag);
+        return ServerResponse.notModified(entityTag);
       }
     } else {
       // The strong comparison function must be used to compare the entity
@@ -385,7 +392,7 @@ public final class RequestImpl implements Request {
 
       if (EntityTag.ANY_MATCH.equals(matchingTag) || matchingTag.equals(entityTag)) {
         // 412 Precondition Failed
-        return Response.status(Response.Status.PRECONDITION_FAILED);
+        return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
       }
     }
     return null;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.core.http;
+package org.restnext.server;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.ALLOW;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_ENCODING;
@@ -30,10 +30,10 @@ import static io.netty.handler.codec.http.HttpHeaderNames.SERVER;
 
 import io.netty.handler.codec.DateFormatter;
 import io.netty.util.AsciiString;
-import io.netty.util.CharsetUtil;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -42,17 +42,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.restnext.core.http.EntityTag;
+import org.restnext.core.http.MediaType;
+import org.restnext.core.http.MultivaluedHashMap;
+import org.restnext.core.http.MultivaluedMap;
+import org.restnext.core.http.Request;
+import org.restnext.core.http.Response;
+
 /**
  * Created by thiago on 24/08/16.
  */
-final class ResponseImpl implements Response {
+public final class ServerResponse implements Response {
 
   private final Version version;
   private final Status status;
   private final byte[] content;
   private final MultivaluedMap<String, String> headers;
 
-  private ResponseImpl(final Builder builder) {
+  private ServerResponse(final Builder builder) {
     this.version = builder.version;
     this.status = builder.status;
     this.content = builder.content;
@@ -124,9 +131,11 @@ final class ResponseImpl implements Response {
     return headers;
   }
 
+  // server response builder
+
   public static final class Builder implements Response.Builder {
 
-    private MultivaluedMap<String, String> headers = new MultivaluedHashMap();
+    private MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
     private Version version = Version.HTTP_1_1;
     private Status status = Status.OK;
     private byte[] content;
@@ -143,7 +152,7 @@ final class ResponseImpl implements Response {
       headers.putSingle("x-powered-by", "Netty");
 
       // Create the response object.
-      return new ResponseImpl(this);
+      return new ServerResponse(this);
     }
 
     @Override
@@ -175,7 +184,7 @@ final class ResponseImpl implements Response {
 
     @Override
     public Response.Builder content(String content) {
-      return content(content, CharsetUtil.UTF_8);
+      return content(content, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -275,7 +284,7 @@ final class ResponseImpl implements Response {
       return setHeader(CONTENT_LOCATION, location);
     }
 
-    public Response.Builder header(CharSequence name, Object value, boolean combined) {
+    private Response.Builder header(CharSequence name, Object value, boolean combined) {
       String headerName = name.toString();
       String headerValue = String.valueOf(value);
       if (value != null) {
@@ -291,4 +300,93 @@ final class ResponseImpl implements Response {
     }
   }
 
+  // convenient methods
+
+  public static Response.Builder status(Status status) {
+    return new ServerResponse.Builder().status(status);
+  }
+
+  public static Response.Builder status(int status) {
+    return status(Status.fromStatusCode(status));
+  }
+
+  public static Response.Builder ok(byte[] content, String type) {
+    return ok(content, MediaType.parse(type));
+  }
+
+  public static Response.Builder ok(byte[] content, MediaType type) {
+    return ok(content).type(type);
+  }
+
+  public static Response.Builder ok(byte[] content) {
+    return ok().content(content);
+  }
+
+  public static Response.Builder ok() {
+    return status(Status.OK);
+  }
+
+  public static Response.Builder ok(MediaType type) {
+    return ok().type(type);
+  }
+
+  public static Response.Builder ok(String content) {
+    return ok(content, StandardCharsets.UTF_8);
+  }
+
+  public static Response.Builder ok(String content, Charset charset) {
+    return ok(content, charset, MediaType.TEXT_UTF8);
+  }
+
+  public static Response.Builder ok(String content, Charset charset, MediaType mediaType) {
+    return ok(content.getBytes(charset), mediaType);
+  }
+
+  public static Response.Builder ok(String content, String mediaType) {
+    return ok(content, StandardCharsets.UTF_8, MediaType.parse(mediaType));
+  }
+
+  public static Response.Builder ok(String content, MediaType mediaType) {
+    return ok(content, StandardCharsets.UTF_8, mediaType);
+  }
+
+  public static Response.Builder serverError() {
+    return status(Status.INTERNAL_SERVER_ERROR);
+  }
+
+  public static Response.Builder created(URI location) {
+    return status(Status.CREATED).location(location);
+  }
+
+  public static Response.Builder accepted() {
+    return status(Status.ACCEPTED);
+  }
+
+  public static Response.Builder noContent() {
+    return status(Status.NO_CONTENT);
+  }
+
+  public static Response.Builder notModified(EntityTag tag) {
+    return notModified().tag(tag);
+  }
+
+  public static Response.Builder notModified() {
+    return status(Status.NOT_MODIFIED);
+  }
+
+  public static Response.Builder notModified(String tag) {
+    return notModified().tag(tag);
+  }
+
+  public static Response.Builder seeOther(URI location) {
+    return status(Status.SEE_OTHER).location(location);
+  }
+
+  public static Response.Builder temporaryRedirect(URI location) {
+    return status(Status.TEMPORARY_REDIRECT).location(location);
+  }
+
+  public static Response.Builder redirect(URI location) {
+    return status(Status.FOUND).location(location);
+  }
 }
