@@ -18,33 +18,43 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-security</artifactId>
-        <version>${restnext.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-util</artifactId>
-        <version>${restnext.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-core</artifactId>
-        <version>${restnext.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-server</artifactId>
-        <version>${restnext.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-route</artifactId>
-        <version>${restnext.version}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
-        <artifactId>netty-all</artifactId>
+        <artifactId>netty-codec-http</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-epoll</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler</artifactId>
         <version>${netty.version}</version>
       </dependency>
       <dependency>
@@ -92,7 +102,6 @@
   </dependencyManagement>
 
   <properties>
-    <restnext.version>0.3.1-SNAPSHOT</restnext.version>
     <netty.version>4.1.9.Final</netty.version>
     <lambda-string.version>1.4</lambda-string.version>
     <slf4j.version>1.7.24</slf4j.version>

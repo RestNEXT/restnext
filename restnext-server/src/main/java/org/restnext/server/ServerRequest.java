@@ -190,7 +190,7 @@ final class ServerRequest implements Request {
 
   @Override
   public int getLength() {
-    return getContent() == null ? 0 : getContent().length;
+    return content == null ? 0 : content.length;
   }
 
   @Override

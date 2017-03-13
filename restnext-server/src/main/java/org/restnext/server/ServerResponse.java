@@ -94,7 +94,7 @@ public final class ServerResponse implements Response {
 
   @Override
   public int getLength() {
-    return getContent() == null ? 0 : getContent().length;
+    return content == null ? 0 : content.length;
   }
 
   @Override
