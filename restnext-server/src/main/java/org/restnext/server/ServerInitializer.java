@@ -22,7 +22,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.cors.CorsConfig;
-import io.netty.handler.codec.http.cors.CorsConfigBuilder;
 import io.netty.handler.codec.http.cors.CorsHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -39,8 +38,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
@@ -74,23 +71,15 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     this.maxContentLength = builder.maxContentLength;
     this.bindAddress = builder.bindAddress;
     this.timeout = builder.timeout;
+    this.group = builder.eventExecutorGroup;
+  }
 
-    ThreadFactory threadFactory = daemon
-        ? new DaemonThreadFactory(Executors.defaultThreadFactory())
-        : Executors.defaultThreadFactory();
-    this.group = new DefaultEventExecutorGroup(
-        Runtime.getRuntime().availableProcessors() * 2,
-        threadFactory);
+  public static Builder builder() {
+    return new ServerInitializer.Builder();
   }
 
   public static Builder route(String uri, Function<Request, Response> provider) {
     return builder().route(uri, provider);
-  }
-
-  // getters methods
-
-  public static Builder builder() {
-    return new ServerInitializer.Builder();
   }
 
   public static Builder routes(Route.Mapping... routesMapping) {
@@ -116,7 +105,11 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
     // If your business logic is fully asynchronous or finished very quickly, you don't need to
     // specify a group.
-    pipeline.addLast(group, "handler", ServerHandler.INSTANCE);
+    if (group != null) {
+      pipeline.addLast(group, "handler", ServerHandler.INSTANCE);
+    } else {
+      pipeline.addLast("handler", ServerHandler.INSTANCE);
+    }
   }
 
   public CorsConfig getCorsConfig() {
@@ -127,13 +120,9 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     return maxContentLength;
   }
 
-  // support methods
-
   public InetSocketAddress getBindAddress() {
     return bindAddress;
   }
-
-  // static methods
 
   public Timeout getTimeout() {
     return timeout;
@@ -146,8 +135,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
   public SslContext getSslCtx() {
     return sslCtx;
   }
-
-  // inner support class
 
   static final class Timeout {
     private final long amount;
@@ -163,34 +150,16 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     }
   }
 
-  static class DaemonThreadFactory implements ThreadFactory {
-    private final ThreadFactory threadFactory;
-
-    DaemonThreadFactory(ThreadFactory threadFactory) {
-      this.threadFactory = threadFactory;
-    }
-
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread thread = threadFactory.newThread(r);
-      if (thread != null) {
-        thread.setDaemon(true);
-      }
-      return thread;
-    }
-  }
-
-  // inner builder class
-
   public static final class Builder {
 
     public static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
         new ServerSelfSignedCertificate();
 
-    private int maxContentLength = 64 * 1024;
-    private Timeout timeout = new Timeout();
-    private CorsConfig corsConfig /*= getCorsConfig()*/;
+    private CorsConfig corsConfig;
     private SslContext sslContext;
+    private Timeout timeout = new Timeout();
+    private int maxContentLength = 64 * 1024;
+    private EventExecutorGroup eventExecutorGroup;
     private InetSocketAddress bindAddress = new InetSocketAddress(8080);
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
@@ -205,6 +174,11 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     public Builder maxContentLength(int maxContentLength) {
       this.maxContentLength = maxContentLength;
+      return this;
+    }
+
+    public Builder executorGroupThreadPoll(int threads) {
+      this.eventExecutorGroup = new DefaultEventExecutorGroup(threads);
       return this;
     }
 
@@ -307,13 +281,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     public final Builder routes(Route.Mapping... routeMapping) {
       Arrays.asList(routeMapping).forEach(Route.INSTANCE::register);
       return this;
-    }
-
-    private CorsConfig getCorsConfig() {
-      return CorsConfigBuilder.forAnyOrigin()
-          .allowNullOrigin()
-          .allowCredentials()
-          .build();
     }
 
     private static class ServerSelfSignedCertificate implements ServerCertificate {

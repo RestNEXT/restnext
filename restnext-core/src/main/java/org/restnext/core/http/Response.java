@@ -190,7 +190,7 @@ public interface Response extends Message, Headers {
 
     Response.Builder language(String language);
 
-    Response.Builder language(Locale language);
+    Response.Builder language(Locale locale);
 
     Response.Builder location(URI location);
 

@@ -16,6 +16,8 @@
 
 package org.restnext.server;
 
+import static io.netty.handler.codec.DateFormatter.format;
+import static io.netty.handler.codec.DateFormatter.parseHttpDate;
 import static io.netty.handler.codec.http.HttpHeaderNames.ALLOW;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_ENCODING;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LANGUAGE;
@@ -28,7 +30,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.LAST_MODIFIED;
 import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
 import static io.netty.handler.codec.http.HttpHeaderNames.SERVER;
 
-import io.netty.handler.codec.DateFormatter;
 import io.netty.util.AsciiString;
 
 import java.net.URI;
@@ -117,7 +118,7 @@ public final class ServerResponse implements Response {
   @Override
   public Date getLastModified() {
     String header = getHeader(LAST_MODIFIED);
-    return header != null ? DateFormatter.parseHttpDate(header) : null;
+    return header != null ? parseHttpDate(header) : null;
   }
 
   @Override
@@ -239,19 +240,19 @@ public final class ServerResponse implements Response {
 
     @Override
     public Response.Builder expires(Date expires) {
-      return setHeader(EXPIRES, expires == null ? null : DateFormatter.format(expires));
+      return setHeader(EXPIRES, expires == null ? null : format(expires));
     }
 
     @Override
     public Response.Builder date(Date date) {
-      return setHeader(DATE, date == null ? null : DateFormatter.format(date));
+      return setHeader(DATE, date == null ? null : format(date));
     }
 
     @Override
     public Response.Builder lastModified(Date lastModified) {
       return setHeader(LAST_MODIFIED, lastModified == null
           ? null
-          : DateFormatter.format(lastModified));
+          : format(lastModified));
     }
 
     @Override

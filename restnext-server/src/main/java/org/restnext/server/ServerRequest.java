@@ -16,6 +16,7 @@
 
 package org.restnext.server;
 
+import static io.netty.handler.codec.DateFormatter.parseHttpDate;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.DATE;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_MATCH;
@@ -25,7 +26,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.IF_UNMODIFIED_SINCE;
 import static org.restnext.util.UriUtils.normalize;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.DateFormatter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
@@ -201,7 +201,7 @@ final class ServerRequest implements Request {
   @Override
   public Date getDate() {
     String header = getHeader(DATE);
-    return header != null ? DateFormatter.parseHttpDate(header) : null;
+    return header != null ? parseHttpDate(header) : null;
   }
 
   @Override
@@ -311,7 +311,7 @@ final class ServerRequest implements Request {
     String ifUnmodifiedSinceHeader = getHeader(IF_UNMODIFIED_SINCE);
 
     if (ifUnmodifiedSinceHeader != null && !ifUnmodifiedSinceHeader.trim().isEmpty()) {
-      long ifUnmodifiedSince = DateFormatter.parseHttpDate(ifUnmodifiedSinceHeader).getTime();
+      long ifUnmodifiedSince = parseHttpDate(ifUnmodifiedSinceHeader).getTime();
       if (roundDown(lastModifiedTime) > ifUnmodifiedSince) {
         // 412 Precondition Failed
         return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
@@ -333,7 +333,7 @@ final class ServerRequest implements Request {
 
   private Response.Builder evaluateIfModifiedSince(
       long lastModifiedTime, String ifModifiedSinceHeader) {
-    final long ifModifiedSince = DateFormatter.parseHttpDate(ifModifiedSinceHeader).getTime();
+    final long ifModifiedSince = parseHttpDate(ifModifiedSinceHeader).getTime();
     if (roundDown(lastModifiedTime) <= ifModifiedSince) {
       // 304 Not modified
       return ServerResponse.notModified();
