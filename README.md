@@ -21,8 +21,8 @@ After several searches on the WWW, I have not found a framework easy to use, hig
     class SimpleExample {
         public static void main(String[] args) {
             ServerInitializer
-                .route("/", req -> Response.ok("it works").build())
-                .route("/ping", req -> Response.ok("pong").build())
+                .route("/", req -> ServerResponse.ok("it works").build())
+                .route("/ping", req -> ServerResponse.ok("pong").build())
                 .start();
         }
     }
@@ -34,12 +34,12 @@ After several searches on the WWW, I have not found a framework easy to use, hig
     class MoreCompleteExample {
         public static void main(String[] args) {
     
-            Function<Request, Response> provider = request -> Response.ok("ok").build();
+            Function<Request, Response> provider = request -> ServerResponse.ok("ok").build();
     
             Function<Request, Response> etagProvider = request -> {
                 EntityTag entityTag = new EntityTag("contentCalculatedEtagValue");
                 return Optional.ofNullable(request.evaluatePreconditions(entityTag))
-                        .orElse(Response.ok().tag(entityTag))
+                        .orElse(ServerResponse.ok().tag(entityTag))
                         .build();
             };
     
@@ -82,7 +82,7 @@ When you enable route/security scanning, the default or custom directory path pr
     /META-INF/security/*.xml
 ```
 
-Each folder (route / security) can contain as many XML files you want, and the name of the XML file can be any name you want.
+Each folder (route/security) can contain as many XML files you want, and the name of the XML file can be any name you want.
 
 routes.xml example:
 
@@ -119,7 +119,7 @@ The route XML </provider> property value **must** have Method Reference syntax a
 class Provider {
     public static Response anyMethodNameYouWant(Request request) {
         // process the request and write some response.
-        return Response.ok().build();
+        return ServerResponse.ok().build();
     }
 }
 ```
@@ -151,7 +151,7 @@ The security XML </provider> property value **must** have Method Reference synta
 class Provider {
     public static boolean anyMethodNameYouWant(Request request) {
         // validate the request.
-        return Response.ok().build();
+        return ServerResponse.ok().build();
     }
 }
 ```
