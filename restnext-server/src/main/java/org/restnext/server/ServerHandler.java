@@ -45,6 +45,7 @@ import java.util.StringJoiner;
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.Message;
 import org.restnext.core.http.Request;
+import org.restnext.core.http.RequestImpl;
 import org.restnext.core.http.Response;
 import org.restnext.core.url.UrlMatch;
 import org.restnext.route.Route;
@@ -74,7 +75,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     }
 
     // Create Request from FullHttpRequest
-    final Request request = new ServerRequest(ctx, req);
+    final Request request = new RequestImpl(ctx, req);
     final String uri = request.getUri().toString();
     final URI baseUri = request.getBaseUri();
     final URI fullRequestUri = baseUri.resolve(uri);
@@ -120,7 +121,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     // Write the response for the request.
     write(ctx, Optional.ofNullable(routeMapping.writeResponse(request))
-        .orElse(ServerResponse.noContent().build()), request.isKeepAlive());
+        .orElse(Response.noContent().build()), request.isKeepAlive());
   }
 
   private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
@@ -178,7 +179,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
       content.add("stackTraceMessage: " + ThrowableUtil.stackTraceToString(cause));
 
       // Write the response error.
-      write(ctx, ServerResponse.status(status)
+      write(ctx, Response.status(status)
               .content(content.toString())
               .type(MediaType.TEXT_UTF8)
               .build(),

@@ -18,6 +18,7 @@ package org.restnext.core.http;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -195,6 +196,97 @@ public interface Response extends Message, Headers {
     Response.Builder location(URI location);
 
     Response.Builder contentLocation(URI location);
+
+  }
+
+  // convenient methods
+
+  static Response.Builder status(Status status) {
+    return new ResponseImpl.Builder().status(status);
+  }
+
+  static Response.Builder status(int status) {
+    return status(Status.fromStatusCode(status));
+  }
+
+  static Response.Builder ok(byte[] content, String type) {
+    return ok(content, MediaType.parse(type));
+  }
+
+  static Response.Builder ok(byte[] content, MediaType type) {
+    return ok(content).type(type);
+  }
+
+  static Response.Builder ok(byte[] content) {
+    return ok().content(content);
+  }
+
+  static Response.Builder ok() {
+    return status(Status.OK);
+  }
+
+  static Response.Builder ok(MediaType type) {
+    return ok().type(type);
+  }
+
+  static Response.Builder ok(String content) {
+    return ok(content, StandardCharsets.UTF_8);
+  }
+
+  static Response.Builder ok(String content, Charset charset) {
+    return ok(content, charset, MediaType.TEXT_UTF8);
+  }
+
+  static Response.Builder ok(String content, Charset charset, MediaType mediaType) {
+    return ok(content.getBytes(charset), mediaType);
+  }
+
+  static Response.Builder ok(String content, String mediaType) {
+    return ok(content, StandardCharsets.UTF_8, MediaType.parse(mediaType));
+  }
+
+  static Response.Builder ok(String content, MediaType mediaType) {
+    return ok(content, StandardCharsets.UTF_8, mediaType);
+  }
+
+  static Response.Builder serverError() {
+    return status(Status.INTERNAL_SERVER_ERROR);
+  }
+
+  static Response.Builder created(URI location) {
+    return status(Status.CREATED).location(location);
+  }
+
+  static Response.Builder accepted() {
+    return status(Status.ACCEPTED);
+  }
+
+  static Response.Builder noContent() {
+    return status(Status.NO_CONTENT);
+  }
+
+  static Response.Builder notModified(EntityTag tag) {
+    return notModified().tag(tag);
+  }
+
+  static Response.Builder notModified() {
+    return status(Status.NOT_MODIFIED);
+  }
+
+  static Response.Builder notModified(String tag) {
+    return notModified().tag(tag);
+  }
+
+  static Response.Builder seeOther(URI location) {
+    return status(Status.SEE_OTHER).location(location);
+  }
+
+  static Response.Builder temporaryRedirect(URI location) {
+    return status(Status.TEMPORARY_REDIRECT).location(location);
+  }
+
+  static Response.Builder redirect(URI location) {
+    return status(Status.FOUND).location(location);
   }
 
 }

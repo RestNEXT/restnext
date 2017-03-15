@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.restnext.server;
+package org.restnext.core.http;
 
 import static io.netty.handler.codec.DateFormatter.parseHttpDate;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
@@ -50,17 +50,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.restnext.core.http.EntityTag;
-import org.restnext.core.http.MediaType;
-import org.restnext.core.http.MultivaluedHashMap;
-import org.restnext.core.http.MultivaluedMap;
-import org.restnext.core.http.Request;
-import org.restnext.core.http.Response;
-
 /**
  * Created by thiago on 24/08/16.
  */
-final class ServerRequest implements Request {
+public final class RequestImpl implements Request {
 
   private final Version version;
   private final Method method;
@@ -78,7 +71,7 @@ final class ServerRequest implements Request {
    * @param context netty channel handler context
    * @param request netty full http request
    */
-  ServerRequest(final ChannelHandlerContext context, final FullHttpRequest request) {
+  public RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
     Objects.requireNonNull(request, "Request must not be null");
     Objects.requireNonNull(context, "Context must not be null");
 
@@ -304,7 +297,7 @@ final class ServerRequest implements Request {
     }
     // Since the resource does not exist the method must not be
     // perform and 412 Precondition Failed is returned
-    return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
+    return Response.status(Response.Status.PRECONDITION_FAILED);
   }
 
   private Response.Builder evaluateIfUnmodifiedSince(long lastModifiedTime) {
@@ -314,7 +307,7 @@ final class ServerRequest implements Request {
       long ifUnmodifiedSince = parseHttpDate(ifUnmodifiedSinceHeader).getTime();
       if (roundDown(lastModifiedTime) > ifUnmodifiedSince) {
         // 412 Precondition Failed
-        return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
+        return Response.status(Response.Status.PRECONDITION_FAILED);
       }
     }
     return null;
@@ -336,7 +329,7 @@ final class ServerRequest implements Request {
     final long ifModifiedSince = parseHttpDate(ifModifiedSinceHeader).getTime();
     if (roundDown(lastModifiedTime) <= ifModifiedSince) {
       // 304 Not modified
-      return ServerResponse.notModified();
+      return Response.notModified();
     }
     return null;
   }
@@ -351,14 +344,14 @@ final class ServerRequest implements Request {
     // tags. Thus if the entity tag of the entity is weak then matching
     // of entity tags in the If-Match header should fail.
     if (entityTag.isWeak()) {
-      return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
+      return Response.status(Response.Status.PRECONDITION_FAILED);
     }
 
     EntityTag matchingTag = getIfMatch();
 
     if (matchingTag != null && matchingTag != EntityTag.ANY_MATCH
         && !matchingTag.equals(entityTag)) {
-      return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
+      return Response.status(Response.Status.PRECONDITION_FAILED);
     }
     return null;
   }
@@ -379,7 +372,7 @@ final class ServerRequest implements Request {
       if (EntityTag.ANY_MATCH.equals(matchingTag) || matchingTag.equals(entityTag)
           || matchingTag.equals(new EntityTag(entityTag.getValue(), !entityTag.isWeak()))) {
         // 304 Not Modified
-        return ServerResponse.notModified(entityTag);
+        return Response.notModified(entityTag);
       }
     } else {
       // The strong comparison function must be used to compare the entity
@@ -392,7 +385,7 @@ final class ServerRequest implements Request {
 
       if (EntityTag.ANY_MATCH.equals(matchingTag) || matchingTag.equals(entityTag)) {
         // 412 Precondition Failed
-        return ServerResponse.status(Response.Status.PRECONDITION_FAILED);
+        return Response.status(Response.Status.PRECONDITION_FAILED);
       }
     }
     return null;

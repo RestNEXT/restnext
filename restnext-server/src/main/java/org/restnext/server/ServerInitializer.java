@@ -268,7 +268,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
      */
     public ServerInitializer build() {
       // register default health check route.
-      route("/ping", request -> ServerResponse.ok("pong").build());
+      route("/ping", request -> Response.ok("pong").build());
       return new ServerInitializer(this);
     }
 

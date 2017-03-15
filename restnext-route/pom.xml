@@ -31,16 +31,8 @@
       <artifactId>restnext-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.restnext</groupId>
-      <artifactId>restnext-util</artifactId>
-    </dependency>
-    <dependency>
       <groupId>pl.joegreen</groupId>
       <artifactId>lambda-from-string</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
