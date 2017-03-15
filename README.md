@@ -21,8 +21,8 @@ After several searches on the WWW, I have not found a framework easy to use, hig
     class SimpleExample {
         public static void main(String[] args) {
             ServerInitializer
-                .route("/", req -> ServerResponse.ok("it works").build())
-                .route("/ping", req -> ServerResponse.ok("pong").build())
+                .route("/", req -> Response.ok("it works").build())
+                .route("/ping", req -> Response.ok("pong").build())
                 .start();
         }
     }
@@ -34,12 +34,12 @@ After several searches on the WWW, I have not found a framework easy to use, hig
     class MoreCompleteExample {
         public static void main(String[] args) {
     
-            Function<Request, Response> provider = request -> ServerResponse.ok("ok").build();
+            Function<Request, Response> provider = request -> Response.ok("ok").build();
     
             Function<Request, Response> etagProvider = request -> {
                 EntityTag entityTag = new EntityTag("contentCalculatedEtagValue");
                 return Optional.ofNullable(request.evaluatePreconditions(entityTag))
-                        .orElse(ServerResponse.ok().tag(entityTag))
+                        .orElse(Response.ok().tag(entityTag))
                         .build();
             };
     
@@ -119,7 +119,7 @@ The route XML </provider> property value **must** have Method Reference syntax a
 class Provider {
     public static Response anyMethodNameYouWant(Request request) {
         // process the request and write some response.
-        return ServerResponse.ok().build();
+        return Response.ok().build();
     }
 }
 ```
@@ -151,7 +151,7 @@ The security XML </provider> property value **must** have Method Reference synta
 class Provider {
     public static boolean anyMethodNameYouWant(Request request) {
         // validate the request.
-        return ServerResponse.ok().build();
+        return Response.ok().build();
     }
 }
 ```
@@ -168,7 +168,7 @@ Maven Artifact:
 <dependency>
     <groupId>org.restnext</groupId>
     <artifactId>restnext-server</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.2</version>
 </dependency>
 ```
 
