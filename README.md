@@ -151,7 +151,7 @@ The security XML </provider> property value **must** have Method Reference synta
 class Provider {
     public static boolean anyMethodNameYouWant(Request request) {
         // validate the request.
-        return Response.ok().build();
+        return true;
     }
 }
 ```
