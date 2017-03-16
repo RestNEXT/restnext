@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 /**
  * A collection of utility methods to retrieve and parse the values of the Java system properties.
  */
-public final class SystemPropertyUtil {
+public final class SysPropertyUtils {
 
-  private static final Logger logger = LoggerFactory.getLogger(SystemPropertyUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(SysPropertyUtils.class);
 
   /**
    * Check if contains this key.
@@ -187,7 +187,7 @@ public final class SystemPropertyUtil {
     return def;
   }
 
-  private SystemPropertyUtil() {
+  private SysPropertyUtils() {
     // Unused
   }
 }
