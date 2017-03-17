@@ -82,6 +82,10 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     return builder().route(uri, provider);
   }
 
+  public static Builder route(Route.Mapping routeMapping) {
+    return routes(routeMapping);
+  }
+
   public static Builder routes(Route.Mapping... routesMapping) {
     return builder().routes(routesMapping);
   }

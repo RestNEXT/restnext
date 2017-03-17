@@ -234,7 +234,7 @@ public interface Response extends Message, Headers {
   }
 
   static Response.Builder ok(String content, Charset charset) {
-    return ok(content, charset, MediaType.TEXT_UTF8);
+    return ok(content, charset, MediaType.TEXT);
   }
 
   static Response.Builder ok(String content, Charset charset, MediaType mediaType) {

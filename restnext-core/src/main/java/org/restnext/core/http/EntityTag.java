@@ -101,7 +101,7 @@ public class EntityTag {
   public static EntityTag fromString(String value) {
     Objects.requireNonNull(value, "value must not be null");
 
-    boolean isWeak = value.startsWith("W/\"");
+    boolean isWeak = value.startsWith("W/\"") && value.endsWith("\"");
     boolean isQuoted = (isWeak || value.startsWith("\"")) && value.endsWith("\"");
     boolean isAnyMatch = "*".equals(value);
 

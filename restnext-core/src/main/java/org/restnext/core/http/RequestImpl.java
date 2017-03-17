@@ -17,7 +17,7 @@
 package org.restnext.core.http;
 
 import static io.netty.handler.codec.DateFormatter.parseHttpDate;
-import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
 import static io.netty.handler.codec.http.HttpHeaderNames.DATE;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_MATCH;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_MODIFIED_SINCE;
@@ -44,11 +44,14 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by thiago on 24/08/16.
@@ -198,9 +201,12 @@ public final class RequestImpl implements Request {
   }
 
   @Override
-  public MediaType getMediaType() {
-    String header = getHeader(CONTENT_TYPE);
-    return header != null ? MediaType.parse(header) : null;
+  public List<MediaType> getMediaType() {
+    String header = getHeader(ACCEPT);
+    return header == null || header.trim().isEmpty()
+        ? Collections.singletonList(MediaType.WILDCARD)
+        : Collections.unmodifiableList(Arrays.stream(header.split(","))
+        .map(MediaType::valueOf).collect(Collectors.toList()));
   }
 
   @Override

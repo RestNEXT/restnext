@@ -28,16 +28,17 @@ import java.util.regex.Pattern;
  */
 public final class MediaType {
 
+  private static final String TYPE_WILDCARD = "*";
+
   private static final String TOKEN = "([a-zA-Z0-9-!#$%&'*+.^_`{|}~]+)";
   private static final String QUOTED = "\"([^\"]*)\"";
-  private static final Pattern TYPE_SUBTYPE = Pattern.compile(TOKEN + "/" + TOKEN);
-  private static final Pattern PARAMETER = Pattern.compile(
+  public static final Pattern TYPE_SUBTYPE = Pattern.compile(TOKEN + "/" + TOKEN);
+  public static final Pattern PARAMETER = Pattern.compile(
       ";\\s*(?:" + TOKEN + "=(?:" + TOKEN + "|" + QUOTED + "))?");
 
-  public static final MediaType JSON = MediaType.parse("application/json");
-  public static final MediaType JSON_UTF8 = MediaType.valueOf(JSON.mediaType + ";charset=utf-8");
+  public static final MediaType WILDCARD = MediaType.parse("*/*");
   public static final MediaType TEXT = MediaType.parse("text/plain");
-  public static final MediaType TEXT_UTF8 = MediaType.valueOf(TEXT.mediaType + ";charset=utf-8");
+  public static final MediaType TEXT_UTF8 = MediaType.parse(TEXT.mediaType + ";charset=utf-8");
 
   private final String mediaType;
   private final String type;
@@ -51,7 +52,6 @@ public final class MediaType {
     this.charset = charset;
   }
 
-  // do not remove this factory method, jackson uses it to deserialize json - Thiago Gutenberg
   public static MediaType valueOf(String string) {
     return parse(string);
   }
@@ -65,10 +65,10 @@ public final class MediaType {
    */
   public static MediaType parse(String string) {
     Matcher typeSubtype = TYPE_SUBTYPE.matcher(string);
-    //if (!typeSubtype.lookingAt()) return null;
     if (!typeSubtype.lookingAt()) {
+      //return null;
       throw new RuntimeException(String.format(
-          "the input '%s' does not seem to be a valid media type.", string));
+          "This input %s is not a well-formed media type.", string));
     }
     String type = typeSubtype.group(1).toLowerCase(Locale.US);
     String subtype = typeSubtype.group(2).toLowerCase(Locale.US);
@@ -77,11 +77,11 @@ public final class MediaType {
     Matcher parameter = PARAMETER.matcher(string);
     for (int s = typeSubtype.end(); s < string.length(); s = parameter.end()) {
       parameter.region(s, string.length());
-      //if (!parameter.lookingAt()) { return null; } // This is not a well-formed media type.
       if (!parameter.lookingAt()) {
         // This is not a well-formed media type.
+        //return null;
         throw new RuntimeException(String.format(
-            "'%s' is not a well-formed media type.", string));
+            "This input %s is not a well-formed media type.", string));
       }
 
       String name = parameter.group(1);
@@ -100,7 +100,10 @@ public final class MediaType {
         charsetParameter = parameter.group(3);
       }
       if (charset != null && !charsetParameter.equalsIgnoreCase(charset)) {
-        throw new IllegalArgumentException("Multiple different charsets: " + string);
+        // Multiple different charsets!
+        //return null;
+        throw new RuntimeException(String.format(
+            "This input %s has multiple different charsets.", string));
       }
       charset = charsetParameter;
     }
@@ -133,44 +136,71 @@ public final class MediaType {
    * @return charset
    */
   public Charset charset() {
-    return charset != null ? Charset.forName(charset) : null;
+    return charset(null);
   }
 
   /**
-   * Returns the charset of this media type, or {@code defaultValue} if this media type doesn't
-   * specify a charset.
-   *
-   * @param defaultValue default charset value
-   * @return charset
+   * Returns the charset of this media type, or {@code defaultValue} if either this media type
+   * doesn't specify a charset, of it its charset is unsupported by the current runtime.
    */
   public Charset charset(Charset defaultValue) {
-    return charset != null ? Charset.forName(charset) : defaultValue;
+    try {
+      return charset != null ? Charset.forName(charset) : defaultValue;
+    } catch (IllegalArgumentException e) {
+      return defaultValue; // This charset is invalid or unsupported. Give up.
+    }
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, subtype);
+  /**
+   * Check if this media type is compatible with another media type. E.g.
+   * image/* is compatible with image/jpeg, image/png, etc. Media type
+   * parameters are ignored. The function is commutative.
+   *
+   * @param other the media type to compare with.
+   * @return true if the types are compatible, false otherwise.
+   */
+  public boolean isCompatible(MediaType other) {
+    return other != null
+        && // return false if other is null, else
+        (type.equals(TYPE_WILDCARD) || other.type.equals(TYPE_WILDCARD)
+            || // both are wildcard types, or
+            (type.equalsIgnoreCase(other.type) && (subtype.equals(TYPE_WILDCARD)
+                || other.subtype.equals(TYPE_WILDCARD)))
+            || // same types, wildcard sub-types, or
+            (type.equalsIgnoreCase(other.type) && this.subtype.equalsIgnoreCase(other.subtype)));
+    // same types & sub-types
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    MediaType mediaType = (MediaType) o;
-    return Objects.equals(type, mediaType.type)
-        && Objects.equals(subtype, mediaType.subtype);
+  /**
+   * Check if this media type is similar with another media type. E.g.
+   * application/xml;q=0.9 is similar with application/xml, application/xml;charset=utf-8, etc.
+   * Media type parameters are ignored.
+   *
+   * @param other the media type to compare with.
+   * @return true if the types are similar, false otherwise.
+   */
+  public boolean isSimilar(MediaType other) {
+    return other != null && type.equals(other.type) && subtype.equals(other.subtype);
   }
 
   /**
    * Returns the encoded media type, like "text/plain; charset=utf-8", appropriate for use in a
    * Content-Type header.
+   *
+   * @return media type as string
    */
   @Override
   public String toString() {
     return mediaType;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return o instanceof MediaType && Objects.equals(((MediaType) o).mediaType, mediaType);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(mediaType);
   }
 }

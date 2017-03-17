@@ -79,7 +79,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     final String uri = request.getUri().toString();
     final URI baseUri = request.getBaseUri();
     final URI fullRequestUri = baseUri.resolve(uri);
-    final MediaType media = request.getMediaType();
+    final List<MediaType> medias = request.getMediaType();
     final Request.Method method = request.getMethod();
 
     // Check security constraint for the request,
@@ -114,9 +114,10 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     // Check if the registered route mapping medias contains the request media,
     // otherwise return 415 Unsupported Media Type response.
     Optional.ofNullable(routeMapping.getMedias())
-        .filter(medias -> medias.contains(media) || medias.isEmpty() || media == null)
+        .filter(routeMedias -> routeMedias.isEmpty() || medias == null
+            || anyMatchMediaType(routeMedias, medias))
         .orElseThrow(() -> new ServerException(String.format(
-            "Unsupported %s media type for the request uri %s", media, fullRequestUri),
+            "Unsupported %s media type(s) for the request uri %s", medias, fullRequestUri),
             UNSUPPORTED_MEDIA_TYPE));
 
     // Write the response for the request.
@@ -240,4 +241,19 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     }
   }
 
+  private static boolean anyMatchMediaType(List<MediaType> l, List<MediaType> l2) {
+    boolean r = false;
+    for (MediaType e : l) {
+      if (r) {
+        break;
+      }
+      for (MediaType e2 : l2) {
+        r = e.isSimilar(e2) || e.isCompatible(e2);
+        if (r) {
+          break;
+        }
+      }
+    }
+    return r;
+  }
 }

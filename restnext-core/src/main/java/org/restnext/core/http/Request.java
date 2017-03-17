@@ -19,6 +19,7 @@ package org.restnext.core.http;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.List;
 
 public interface Request extends Message, Headers {
 
@@ -40,7 +41,7 @@ public interface Request extends Message, Headers {
 
   Date getDate();
 
-  MediaType getMediaType();
+  List<MediaType> getMediaType();
 
   Charset charset();
 
@@ -55,5 +56,4 @@ public interface Request extends Message, Headers {
   enum Method {
     GET, POST, PUT, DELETE
   }
-
 }
