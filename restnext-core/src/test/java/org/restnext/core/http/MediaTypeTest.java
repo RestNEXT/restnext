@@ -64,7 +64,7 @@ public class MediaTypeTest {
     assertMediaType("text/plain; ;");
   }
 
-  @Test
+  @Test(expected = RuntimeException.class)
   public void testInvalidParse() throws Exception {
     assertInvalid("");
     assertInvalid("/");
@@ -190,6 +190,21 @@ public class MediaTypeTest {
     assertEquals("text/plain;", mediaType.toString());
   }
 
+  @Test
+  public void testSimilarMediaType() {
+    MediaType xmlMediaType = MediaType.parse("application/xml");
+    assertTrue(MediaType.parse("application/xml;q=0.9").isSimilar(xmlMediaType));
+    assertTrue(MediaType.parse("application/xml;charset=utf-8").isSimilar(xmlMediaType));
+  }
+
+  @Test
+  public void testCompatibleMediaType() {
+    MediaType imageWildCard = MediaType.parse("image/*");
+    assertTrue(MediaType.parse("image/jpeg").isCompatible(imageWildCard));
+    assertTrue(MediaType.parse("image/png").isCompatible(imageWildCard));
+    assertTrue(MediaType.parse("image/png").isCompatible(MediaType.WILDCARD));
+  }
+
   private void assertMediaType(String string) {
     MediaType mediaType = MediaType.parse(string);
     assertEquals(string, mediaType.toString());
@@ -197,5 +212,6 @@ public class MediaTypeTest {
 
   private void assertInvalid(String string) {
     //assertNull(string, MediaType.parse(string));
+    MediaType.parse(string);
   }
 }

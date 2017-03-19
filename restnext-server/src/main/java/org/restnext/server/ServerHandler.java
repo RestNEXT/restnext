@@ -115,7 +115,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     // otherwise return 415 Unsupported Media Type response.
     Optional.ofNullable(routeMapping.getMedias())
         .filter(routeMedias -> routeMedias.isEmpty() || medias == null
-            || anyMatchMediaType(routeMedias, medias))
+            || medias.contains(MediaType.WILDCARD) || anyMatchMediaType(routeMedias, medias))
         .orElseThrow(() -> new ServerException(String.format(
             "Unsupported %s media type(s) for the request uri %s", medias, fullRequestUri),
             UNSUPPORTED_MEDIA_TYPE));
