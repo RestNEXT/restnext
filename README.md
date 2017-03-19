@@ -168,7 +168,7 @@ Maven Artifact:
 <dependency>
     <groupId>org.restnext</groupId>
     <artifactId>restnext-server</artifactId>
-    <version>0.3.3</version>
+    <version>0.3.4</version>
 </dependency>
 ```
 
