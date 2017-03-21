@@ -279,7 +279,11 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     // convenient methods
 
     public Builder route(String uri, Function<Request, Response> provider) {
-      return routes(Route.Mapping.uri(uri, provider).build());
+      return route(Route.Mapping.uri(uri, provider).build());
+    }
+
+    public Builder route(Route.Mapping routeMapping) {
+      return routes(routeMapping);
     }
 
     public final Builder routes(Route.Mapping... routeMapping) {
