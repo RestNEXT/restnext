@@ -16,7 +16,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.restnext</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>restnext-bom</artifactId>
         <version>${project.version}</version>
         <type>pom</type>
@@ -31,7 +31,7 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.restnext</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>restnext-util</artifactId>
     </dependency>
     <dependency>
