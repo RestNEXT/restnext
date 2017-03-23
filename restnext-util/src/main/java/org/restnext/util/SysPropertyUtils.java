@@ -16,6 +16,8 @@
 
 package org.restnext.util;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
@@ -37,6 +39,33 @@ public final class SysPropertyUtils {
    */
   public static boolean contains(String key) {
     return get(key) != null;
+  }
+
+  /**
+   * Returns the value of the Java system property with the specified {@code key}, while falling
+   * back to {@code null} if the property access fails.
+   *
+   * @param key the key
+   * @param more additional strings to be joined to form the path string
+   * @return the property value or {@code null}
+   */
+  public static Path getPath(String key, String... more) {
+    return getPath(key, null, more);
+  }
+
+  /**
+   * Returns the value of the Java system property with the specified {@code key}, while falling
+   * back to the specified default value if the property access fails.
+   *
+   * @param key the key
+   * @param def the default value
+   * @param more additional strings to be joined to form the path string
+   * @return the property value. {@code def} if there's no such property or if an access to the
+   *     specified property is not allowed.
+   */
+  public static Path getPath(String key, Path def, String... more) {
+    String value = get(key);
+    return value != null ? Paths.get(value, more) : def;
   }
 
   /**

@@ -25,11 +25,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -56,9 +54,10 @@ import pl.joegreen.lambdaFromString.TypeReference;
  */
 public final class RouteScanner {
 
-  public static final Path DEFAULT_ROUTE_DIR = Paths.get(
-      SysPropertyUtils.get("user.dir"), "route");
   private static final Logger LOGGER = LoggerFactory.getLogger(RouteScanner.class);
+
+  public static final Path DEFAULT_ROUTE_DIR = SysPropertyUtils.getPath("user.dir", "route");
+
   private final Route route;
   private final Jaxb routesJaxb;
   private final Path routeDirectory;
@@ -125,17 +124,14 @@ public final class RouteScanner {
   // getters methods
 
   void remove(final Path jar) {
-    Iterator<Map.Entry<Path, Map<Path, Set<Route.Mapping>>>> jarIterator =
-        routeJarFilesMap.entrySet().iterator();
-    while (jarIterator.hasNext()) {
-      Map.Entry<Path, Map<Path, Set<Route.Mapping>>> jarEntry = jarIterator.next();
-      if (jarEntry.getKey().equals(jar.getFileName())) {
-        for (Map.Entry<Path, Set<Route.Mapping>> routeFileEntry : jarEntry.getValue().entrySet()) {
-          routeFileEntry.getValue().forEach(this.route::unregister);
-          jarIterator.remove();
-        }
+    routeJarFilesMap.entrySet().removeIf(jarEntry -> {
+      final boolean unregister = jarEntry.getKey().equals(jar.getFileName());
+      if (unregister) {
+        jarEntry.getValue()
+            .forEach((file, routeMappings) -> routeMappings.forEach(this.route::unregister));
       }
-    }
+      return unregister;
+    });
   }
 
   // private methods

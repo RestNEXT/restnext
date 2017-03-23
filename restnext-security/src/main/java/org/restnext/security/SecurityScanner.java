@@ -25,11 +25,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -54,9 +52,10 @@ import pl.joegreen.lambdaFromString.TypeReference;
  */
 public final class SecurityScanner {
 
-  public static final Path DEFAULT_SECURITY_DIR = Paths.get(
-      SysPropertyUtils.get("user.dir"), "security");
   private static final Logger LOGGER = LoggerFactory.getLogger(SecurityScanner.class);
+
+  public static final Path DEFAULT_SECURITY_DIR = SysPropertyUtils.getPath("user.dir", "security");
+
   private final Security security;
   private final Jaxb securityJaxb;
   private final Path securityDirectory;
@@ -122,18 +121,15 @@ public final class SecurityScanner {
   // getters methods
 
   void remove(final Path jar) {
-    Iterator<Map.Entry<Path, Map<Path, Set<Security.Mapping>>>> jarIterator =
-        securityJarFilesMap.entrySet().iterator();
-    while (jarIterator.hasNext()) {
-      Map.Entry<Path, Map<Path, Set<Security.Mapping>>> jarEntry = jarIterator.next();
-      if (jarEntry.getKey().equals(jar.getFileName())) {
-        for (Map.Entry<Path, Set<Security.Mapping>> securityFileEntry :
-            jarEntry.getValue().entrySet()) {
-          securityFileEntry.getValue().forEach(this.security::unregister);
-          jarIterator.remove();
-        }
+    securityJarFilesMap.entrySet().removeIf(jarEntry -> {
+      final boolean unregister = jarEntry.getKey().equals(jar.getFileName());
+      if (unregister) {
+        jarEntry.getValue()
+            .forEach(
+                (file, securityMappings) -> securityMappings.forEach(this.security::unregister));
       }
-    }
+      return unregister;
+    });
   }
 
   // private methods
