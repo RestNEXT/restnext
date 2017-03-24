@@ -53,7 +53,7 @@ public enum Route {
    * @param routeMapping the route mapping to be registered
    */
   public final void register(final Route.Mapping routeMapping) {
-    Objects.requireNonNull(routeMapping, "Route mapping must not be null");
+    Objects.requireNonNull(routeMapping, "routeMapping");
 
     final String uri = routeMapping.getUri();
     final Route.Mapping routeMappingRegistered = registry.get(uri);
@@ -76,9 +76,7 @@ public enum Route {
    * @param uri the uri to be unregistered
    */
   public void unregister(final String uri) {
-    Objects.requireNonNull(uri, "Uri must not be null");
-
-    if (getRouteMapping(uri) != null) {
+    if (getRouteMapping(Objects.requireNonNull(uri, "uri")) != null) {
       registry.remove(uri);
       LOGGER.debug("The route uri {} was unregistered", uri);
     }
@@ -178,11 +176,8 @@ public enum Route {
        * @param provider the provider function
        */
       public Builder(final String uri, final Function<Request, Response> provider) {
-        Objects.requireNonNull(uri, "Uri must not be null");
-        Objects.requireNonNull(provider, "Provider must not be null");
-
-        this.uri = normalize(uri);
-        this.provider = provider;
+        this.uri = normalize(Objects.requireNonNull(uri, "uri"));
+        this.provider = Objects.requireNonNull(provider, "provider");
         this.urlMatcher = isPathParamUri(this.uri)
             ? new UrlPattern(this.uri)
             : new UrlRegex(this.uri);

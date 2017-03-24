@@ -86,8 +86,7 @@ public class EntityTag {
    * @throws NullPointerException if value is {@code null}.
    */
   public EntityTag(final String value, final boolean weak) {
-    Objects.requireNonNull(value, "value must not be null");
-    this.value = value;
+    this.value = Objects.requireNonNull(value, "value");
     this.weak = weak;
   }
 
@@ -99,7 +98,7 @@ public class EntityTag {
    * @throws NullPointerException if the supplied string cannot be parsed or is {@code null}.
    */
   public static EntityTag fromString(String value) {
-    Objects.requireNonNull(value, "value must not be null");
+    Objects.requireNonNull(value, "value");
 
     boolean isWeak = value.startsWith("W/\"") && value.endsWith("\"");
     boolean isQuoted = (isWeak || value.startsWith("\"")) && value.endsWith("\"");

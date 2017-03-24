@@ -51,8 +51,7 @@ public enum Security {
    * @return true if its ok, otherwise false
    */
   public static boolean checkAuthorization(final Request request) {
-    Objects.requireNonNull(request, "Request must not be null");
-
+    Objects.requireNonNull(request, "request");
     return Optional.ofNullable(Security.INSTANCE.getSecurityMapping(request.getUri().toString()))
         .filter(Security.Mapping::isEnable)
         .map(securityMapping -> securityMapping.getSecurityProvider().apply(request))
@@ -80,7 +79,7 @@ public enum Security {
    * @param securityMapping the security mapping
    */
   public final void register(final Security.Mapping securityMapping) {
-    Objects.requireNonNull(securityMapping, "Security mapping must not be null");
+    Objects.requireNonNull(securityMapping, "securityMapping");
 
     final String uri = securityMapping.getUri();
     final Security.Mapping securityMappingRegistered = registry.get(uri);
@@ -105,8 +104,7 @@ public enum Security {
    * @param uri the uri
    */
   public void unregister(final String uri) {
-    Objects.requireNonNull(uri, "Uri must not be null");
-    if (getSecurityMapping(uri) != null) {
+    if (getSecurityMapping(Objects.requireNonNull(uri, "uri")) != null) {
       registry.remove(uri);
       LOGGER.debug("The security uri {} was unregistered", uri);
     }
@@ -171,11 +169,8 @@ public enum Security {
        * @param provider the provider function
        */
       public Builder(final String uri, final Function<Request, Boolean> provider) {
-        Objects.requireNonNull(uri, "Uri must not be null");
-        Objects.requireNonNull(provider, "Provider must not be null");
-
-        this.uri = normalize(uri);
-        this.provider = provider;
+        this.uri = normalize(Objects.requireNonNull(uri, "uri"));
+        this.provider = Objects.requireNonNull(provider, "provider");
         this.urlMatcher = isPathParamUri(this.uri)
             ? new UrlPattern(this.uri)
             : new UrlRegex(this.uri);

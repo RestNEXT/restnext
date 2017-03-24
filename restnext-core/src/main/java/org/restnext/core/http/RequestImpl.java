@@ -75,8 +75,8 @@ public final class RequestImpl implements Request {
    * @param request netty full http request
    */
   public RequestImpl(final ChannelHandlerContext context, final FullHttpRequest request) {
-    Objects.requireNonNull(request, "Request must not be null");
-    Objects.requireNonNull(context, "Context must not be null");
+    Objects.requireNonNull(request, "request");
+    Objects.requireNonNull(context, "context");
 
     this.charset = HttpUtil.getCharset(request, StandardCharsets.UTF_8);
     this.version = HttpVersion.HTTP_1_0.equals(request.protocolVersion())

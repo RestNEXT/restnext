@@ -64,8 +64,7 @@ public final class Server {
    * @param serverInitializer the server initializer
    */
   public Server(final ServerInitializer serverInitializer) {
-    Objects.requireNonNull(serverInitializer, "Server initializer must not be null");
-    this.serverInitializer = serverInitializer;
+    this.serverInitializer = Objects.requireNonNull(serverInitializer, "serverInitializer");
     Runtime.getRuntime().addShutdownHook(new Thread("server-hook") {
       @Override
       public void run() {

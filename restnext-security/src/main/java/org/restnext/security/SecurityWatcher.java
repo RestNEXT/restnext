@@ -40,8 +40,7 @@ final class SecurityWatcher implements Runnable {
   private final SecurityScanner securityScanner;
 
   SecurityWatcher(final SecurityScanner securityScanner) {
-    Objects.requireNonNull(securityScanner, "Security scanner must not be null");
-    this.securityScanner = securityScanner;
+    this.securityScanner = Objects.requireNonNull(securityScanner, "securityScanner");
   }
 
   @Override

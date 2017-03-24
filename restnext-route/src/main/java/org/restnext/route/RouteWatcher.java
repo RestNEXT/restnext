@@ -40,8 +40,7 @@ final class RouteWatcher implements Runnable {
   private final RouteScanner routeScanner;
 
   RouteWatcher(final RouteScanner routeScanner) {
-    Objects.requireNonNull(routeScanner, "Route scanner must not be null");
-    this.routeScanner = routeScanner;
+    this.routeScanner = Objects.requireNonNull(routeScanner, "routeScanner");
   }
 
   @Override

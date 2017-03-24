@@ -76,13 +76,9 @@ public final class SecurityScanner {
    * @param securityDirectory the security directory path
    */
   public SecurityScanner(final Security security, final Path securityDirectory) {
-    Objects.requireNonNull(security, "Security must not be null");
-    Objects.requireNonNull(securityDirectory, "Security directory must not be null");
-
-    this.security = security;
-    this.securityDirectory = securityDirectory;
+    this.security = Objects.requireNonNull(security, "security");
+    this.securityDirectory = Objects.requireNonNull(securityDirectory, "securityDirectory");
     this.securityJaxb = new Jaxb("security.xsd", Securities.class);
-
     // start task for watching dir for changes.
     new Thread(new SecurityWatcher(this), "security-dir-watcher").start();
   }

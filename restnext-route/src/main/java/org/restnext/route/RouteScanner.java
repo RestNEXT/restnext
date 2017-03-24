@@ -78,13 +78,9 @@ public final class RouteScanner {
    * @param routeDirectory the route directory path
    */
   public RouteScanner(final Route route, final Path routeDirectory) {
-    Objects.requireNonNull(route, "Route must not be null");
-    Objects.requireNonNull(routeDirectory, "Route directory must not be null");
-
-    this.route = route;
-    this.routeDirectory = routeDirectory;
+    this.route = Objects.requireNonNull(route, "route");
+    this.routeDirectory = Objects.requireNonNull(routeDirectory, "routeDirectory");
     this.routesJaxb = new Jaxb("routes.xsd", Routes.class);
-
     // start task for watching dir for changes.
     new Thread(new RouteWatcher(this), "route-dir-watcher").start();
   }
