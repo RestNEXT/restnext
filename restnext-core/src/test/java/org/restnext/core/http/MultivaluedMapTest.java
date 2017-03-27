@@ -47,16 +47,6 @@ import org.junit.Test;
 
 public class MultivaluedMapTest {
 
-  //@Before
-  //public void setUp() throws Exception {
-  //    RuntimeDelegate.setInstance(new RuntimeDelegateStub());
-  //}
-
-  //@After
-  //public void tearDown() throws Exception {
-  //    RuntimeDelegate.setInstance(null);
-  //}
-
   @Test
   public void testEqualsIgnoreOrder() {
     MultivaluedHashMap<String, String> mvm1 = new MultivaluedHashMap<>();

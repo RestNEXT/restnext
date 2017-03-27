@@ -413,7 +413,7 @@ public final class RequestImpl implements Request {
   private EntityTag readMatchingEntityTag(String header) {
     return (header == null || header.isEmpty())
         ? null
-        : EntityTag.fromString(header);
+        : EntityTag.valueOf(header);
   }
 
   @Override

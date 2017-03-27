@@ -105,7 +105,7 @@ public final class ResponseImpl implements Response {
   @Override
   public EntityTag getEntityTag() {
     String header = getHeader(ETAG);
-    return header != null ? EntityTag.fromString(header) : null;
+    return header != null ? EntityTag.valueOf(header) : null;
   }
 
   @Override

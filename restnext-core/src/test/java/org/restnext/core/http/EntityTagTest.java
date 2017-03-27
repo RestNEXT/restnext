@@ -18,7 +18,9 @@ package org.restnext.core.http;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -45,14 +47,14 @@ public class EntityTagTest {
 
   @Test
   public void fromStringWeakTest() throws Exception {
-    assertEquals(EntityTag.fromString(
+    assertEquals(EntityTag.valueOf(
         "W/\"Hello \\\"World\\\"\""),
         new EntityTag("Hello \"World\"", true));
   }
 
   @Test
   public void fromStringStrongTest() throws Exception {
-    assertEquals(EntityTag.fromString(
+    assertEquals(EntityTag.valueOf(
         "\"Hello \\\"World\\\"\""),
         new EntityTag("Hello \"World\""));
   }
@@ -61,7 +63,7 @@ public class EntityTagTest {
   public void anyMatchTest() throws Exception {
     assertEquals(new EntityTag("*").toString(), "\"*\"");
     assertEquals(new EntityTag("*"), EntityTag.ANY_MATCH);
-    assertEquals(new EntityTag("*"), EntityTag.fromString("*"));
+    assertEquals(new EntityTag("*"), EntityTag.valueOf("*"));
     assertThat(EntityTag.ANY_MATCH, is(new EntityTag("*")));
   }
 
@@ -69,10 +71,35 @@ public class EntityTagTest {
   public void badEntityTagTest() {
     String header = "1\"";
     try {
-      EntityTag.fromString(header);
+      EntityTag.valueOf(header);
       fail("RuntimeException expected");
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), containsString(header));
     }
+    try {
+      EntityTag.valueOf(null);
+      fail("RuntimeException expected");
+    } catch (RuntimeException e) {
+      assertThat(e.getMessage(), is(equalTo("value")));
+    }
+  }
+
+  @Test
+  public void equalsTest() {
+    String sw = "lala\"lala";
+    String se = "eeee\"eeee";
+    EntityTag w = new EntityTag(sw, true);
+    EntityTag w2 = new EntityTag(se, true);
+    EntityTag e = new EntityTag(sw);
+    EntityTag e2 = new EntityTag(se);
+    assertNotEquals(w, w2);
+    assertNotEquals(e, e2);
+    assertNotEquals(w, e2);
+    assertNotEquals(e, w2);
+    assertNotEquals(w, e);
+    assertEquals(e, e);
+    assertEquals(e2, e2);
+    assertEquals(w, w);
+    assertEquals(w2, w2);
   }
 }
