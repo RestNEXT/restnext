@@ -21,8 +21,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.http.cors.CorsConfig;
-import io.netty.handler.codec.http.cors.CorsHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -56,22 +54,37 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
   private final Timeout timeout;
   private final SslContext sslCtx;
-  private final CorsConfig corsConfig;
   private final int maxContentLength;
   private final InetSocketAddress bindAddress;
   private final EventExecutorGroup group;
 
   private ServerInitializer(final Builder builder) {
-    this(builder, true);
-  }
-
-  private ServerInitializer(final Builder builder, final boolean daemon) {
     this.sslCtx = builder.sslContext;
-    this.corsConfig = builder.corsConfig;
     this.maxContentLength = builder.maxContentLength;
     this.bindAddress = builder.bindAddress;
     this.timeout = builder.timeout;
     this.group = builder.eventExecutorGroup;
+  }
+
+  @Override
+  protected void initChannel(SocketChannel ch) throws Exception {
+    ChannelPipeline pipeline = ch.pipeline();
+    if (isSslConfigured()) {
+      pipeline.addLast("ssl", sslCtx.newHandler(ch.alloc()));
+    }
+    pipeline.addLast("http", new HttpServerCodec());
+    pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
+    pipeline.addLast("streamer", new ChunkedWriteHandler());
+    pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
+    // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
+    // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
+    // If your business logic is fully asynchronous or finished very quickly, you don't need to
+    // specify a group.
+    if (group != null) {
+      pipeline.addLast(group, "handler", ServerHandler.INSTANCE);
+    } else {
+      pipeline.addLast("handler", ServerHandler.INSTANCE);
+    }
   }
 
   public static Builder builder() {
@@ -90,57 +103,15 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     return builder().routes(routesMapping);
   }
 
-  @Override
-  protected void initChannel(SocketChannel ch) throws Exception {
-    ChannelPipeline pipeline = ch.pipeline();
-    if (sslCtx != null) {
-      pipeline.addLast("ssl", sslCtx.newHandler(ch.alloc()));
-    }
-    pipeline.addLast("http", new HttpServerCodec());
-    pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
-    pipeline.addLast("streamer", new ChunkedWriteHandler());
-    if (corsConfig != null) {
-      ch.pipeline().addLast("cors", new CorsHandler(corsConfig));
-    }
-    if (timeout != null) {
-      pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
-    }
-    // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
-    // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
-    // If your business logic is fully asynchronous or finished very quickly, you don't need to
-    // specify a group.
-    if (group != null) {
-      pipeline.addLast(group, "handler", ServerHandler.INSTANCE);
-    } else {
-      pipeline.addLast("handler", ServerHandler.INSTANCE);
-    }
-  }
-
-  public CorsConfig getCorsConfig() {
-    return corsConfig;
-  }
-
-  public int getMaxContentLength() {
-    return maxContentLength;
-  }
-
   public InetSocketAddress getBindAddress() {
     return bindAddress;
   }
 
-  public Timeout getTimeout() {
-    return timeout;
-  }
-
   public boolean isSslConfigured() {
-    return getSslCtx() != null;
+    return sslCtx != null;
   }
 
-  public SslContext getSslCtx() {
-    return sslCtx;
-  }
-
-  static final class Timeout {
+  private static final class Timeout {
     private final long amount;
     private final TimeUnit unit;
 
@@ -159,7 +130,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     public static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
         new ServerSelfSignedCertificate();
 
-    private CorsConfig corsConfig;
     private SslContext sslContext;
     private Timeout timeout = new Timeout();
     private int maxContentLength = 64 * 1024;
@@ -183,11 +153,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     public Builder executorGroupThreadPoll(int threads) {
       this.eventExecutorGroup = new DefaultEventExecutorGroup(threads);
-      return this;
-    }
-
-    public Builder cors(CorsConfig corsConfig) {
-      this.corsConfig = corsConfig;
       return this;
     }
 
@@ -275,8 +240,6 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       route("/ping", request -> Response.ok("pong").build());
       return new ServerInitializer(this);
     }
-
-    // convenient methods
 
     public Builder route(String uri, Function<Request, Response> provider) {
       return route(Route.Mapping.uri(uri, provider).build());

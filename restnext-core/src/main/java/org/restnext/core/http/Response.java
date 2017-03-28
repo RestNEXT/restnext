@@ -45,6 +45,10 @@ public interface Response extends Message, Headers {
 
   URI getLocation();
 
+  boolean isChunked();
+
+  int getChunkSize();
+
   enum Status {
 
     OK(200, "OK"),
@@ -197,6 +201,9 @@ public interface Response extends Message, Headers {
 
     Response.Builder contentLocation(URI location);
 
+    Response.Builder chunked();
+
+    Response.Builder chunked(int chunkSize);
   }
 
   // convenient methods

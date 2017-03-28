@@ -23,17 +23,23 @@ import static org.restnext.core.http.Response.Status.NOT_FOUND;
 import static org.restnext.core.http.Response.Status.UNAUTHORIZED;
 import static org.restnext.core.http.Response.Status.UNSUPPORTED_MEDIA_TYPE;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpChunkedInput;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.stream.ChunkedStream;
 import io.netty.util.internal.ThrowableUtil;
 
 import java.net.URI;
@@ -114,8 +120,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     // Check if the registered route mapping medias contains the request media,
     // otherwise return 415 Unsupported Media Type response.
     Optional.ofNullable(routeMapping.getMedias())
-        .filter(routeMedias -> routeMedias.isEmpty() || medias == null
-            || medias.contains(MediaType.WILDCARD) || anyMatchMediaType(routeMedias, medias))
+        .filter(routeMedias -> anyMatchMediaType(routeMedias, medias))
         .orElseThrow(() -> new ServerException(String.format(
             "Unsupported %s media type(s) for the request uri %s", medias, fullRequestUri),
             UNSUPPORTED_MEDIA_TYPE));
@@ -126,30 +131,59 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   }
 
   private void write(ChannelHandlerContext ctx, Response response, boolean keepAlive) {
-    // create netty response
-    FullHttpResponse resp = new DefaultFullHttpResponse(
-        fromVersion(response.getVersion()),
-        fromStatus(response.getStatus()),
-        response.hasContent()
-            ? Unpooled.wrappedBuffer(response.getContent())
-            : Unpooled.buffer(0));
+    HttpVersion version = fromVersion(response.getVersion());
+    HttpResponseStatus status = fromStatus(response.getStatus());
+    ByteBuf content = response.hasContent()
+        ? Unpooled.wrappedBuffer(response.getContent())
+        : Unpooled.EMPTY_BUFFER;
 
+    boolean chunked = response.isChunked();
+
+    // create netty response
+    HttpResponse resp;
+    HttpChunkedInput chunkedResp = chunked
+        ? new HttpChunkedInput(new ChunkedStream(
+            new ByteBufInputStream(content), response.getChunkSize()))
+        : null;
+
+    if (chunked) {
+      resp = new DefaultHttpResponse(version, status);
+      HttpUtil.setTransferEncodingChunked(resp, chunked);
+      createOutboutHeaders(resp, response, keepAlive);
+      // Write the initial line and the header.
+      ctx.write(resp);
+    } else {
+      resp = new DefaultFullHttpResponse(version, status, content);
+      createOutboutHeaders(resp, response, keepAlive);
+    }
+
+    if (keepAlive) {
+      if (chunked) {
+        ctx.write(chunkedResp);
+      } else {
+        HttpUtil.setContentLength(resp, content.readableBytes());
+        ctx.write(resp);
+      }
+    } else {
+      ChannelFuture channelFuture;
+      if (chunked) {
+        channelFuture = ctx.writeAndFlush(chunkedResp);
+      } else {
+        channelFuture = ctx.writeAndFlush(resp);
+      }
+      // Close the connection after the write operation is done if necessary.
+      channelFuture.addListener(ChannelFutureListener.CLOSE);
+    }
+  }
+
+  private void createOutboutHeaders(HttpResponse resp, Response response, boolean keepAlive) {
     // Copy the outbound response headers.
     for (Map.Entry<String, List<String>> entries : response.getHeaders().entrySet()) {
       resp.headers().add(entries.getKey(), entries.getValue());
     }
-
     // Check and set keep alive header to decide
     // whether to close the connection or not.
     HttpUtil.setKeepAlive(resp, keepAlive);
-
-    if (keepAlive) {
-      HttpUtil.setContentLength(resp, resp.content().readableBytes());
-      ctx.write(resp);
-    } else {
-      // Close the connection after the write operation is done if necessary.
-      ctx.writeAndFlush(resp).addListener(ChannelFutureListener.CLOSE);
-    }
   }
 
   @Override
@@ -167,10 +201,10 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
       // Create the response error body.
       String newLine = "\r\n";
-      StringJoiner content = new StringJoiner(newLine)
-          .add("statusCode: " + status.getStatusCode())
-          .add("statusMessage: " + status.getReasonPhrase())
-          .add("statusFamily: " + status.getFamily());
+      StringJoiner content = new StringJoiner(newLine);
+      content.add("statusCode: " + status.getStatusCode());
+      content.add("statusMessage: " + status.getReasonPhrase());
+      content.add("statusFamily: " + status.getFamily());
       if (cause.getMessage() != null) {
         content.add("errorMessage: " + cause.getMessage());
       }
@@ -180,11 +214,11 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
       content.add("stackTraceMessage: " + ThrowableUtil.stackTraceToString(cause));
 
       // Write the response error.
-      write(ctx, Response.status(status)
-              .content(content.toString())
-              .type(MediaType.TEXT_UTF8)
-              .build(),
-          false);
+      write(ctx, Response
+          .status(status)
+          .content(content.toString())
+          .type(MediaType.TEXT_UTF8)
+          .build(), false);
     }
     ctx.close();
   }
@@ -241,13 +275,20 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     }
   }
 
-  private static boolean anyMatchMediaType(List<MediaType> l, List<MediaType> l2) {
+  private boolean anyMatchMediaType(List<MediaType> routeMappingMedias,
+                                    List<MediaType> requestMedias) {
+
+    if (routeMappingMedias == null || routeMappingMedias.isEmpty() || requestMedias == null
+        || requestMedias.isEmpty() || requestMedias.contains(MediaType.WILDCARD)) {
+      return true;
+    }
+
     boolean r = false;
-    for (MediaType e : l) {
+    for (MediaType e : routeMappingMedias) {
       if (r) {
         break;
       }
-      for (MediaType e2 : l2) {
+      for (MediaType e2 : requestMedias) {
         r = e.isSimilar(e2) || e.isCompatible(e2);
         if (r) {
           break;

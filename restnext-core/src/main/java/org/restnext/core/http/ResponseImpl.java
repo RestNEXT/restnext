@@ -52,12 +52,16 @@ public final class ResponseImpl implements Response {
   private final Status status;
   private final byte[] content;
   private final MultivaluedMap<String, String> headers;
+  private final boolean chunked;
+  private final int chunkSize;
 
   private ResponseImpl(final Builder builder) {
     this.version = builder.version;
     this.status = builder.status;
     this.content = builder.content;
     this.headers = builder.headers;
+    this.chunked = builder.chunked;
+    this.chunkSize = builder.chunkSize;
   }
 
   @Override
@@ -125,6 +129,16 @@ public final class ResponseImpl implements Response {
     return headers;
   }
 
+  @Override
+  public boolean isChunked() {
+    return chunked;
+  }
+
+  @Override
+  public int getChunkSize() {
+    return chunkSize;
+  }
+
   // server response builder
 
   public static final class Builder implements Response.Builder {
@@ -133,6 +147,8 @@ public final class ResponseImpl implements Response {
     private Version version = Version.HTTP_1_1;
     private Status status = Status.OK;
     private byte[] content;
+    private boolean chunked = false;
+    private int chunkSize = 8192;
 
     @Override
     public Response build() {
@@ -276,6 +292,18 @@ public final class ResponseImpl implements Response {
     @Override
     public Response.Builder contentLocation(URI location) {
       return setHeader(CONTENT_LOCATION, location);
+    }
+
+    @Override
+    public Response.Builder chunked() {
+      return chunked(chunkSize);
+    }
+
+    @Override
+    public Response.Builder chunked(int chunkSize) {
+      this.chunked = true;
+      this.chunkSize = chunkSize;
+      return this;
     }
 
     private Response.Builder header(CharSequence name, Object value, boolean combined) {
