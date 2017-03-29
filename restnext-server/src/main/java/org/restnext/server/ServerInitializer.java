@@ -25,7 +25,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
@@ -35,8 +34,8 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
 
@@ -52,7 +51,7 @@ import org.restnext.security.SecurityScanner;
  */
 public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
-  private final Timeout timeout;
+  private final Duration timeout;
   private final SslContext sslCtx;
   private final int maxContentLength;
   private final InetSocketAddress bindAddress;
@@ -75,7 +74,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     pipeline.addLast("http", new HttpServerCodec());
     pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
     pipeline.addLast("streamer", new ChunkedWriteHandler());
-    pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.amount, timeout.unit));
+    pipeline.addLast("timeout", new CustomReadTimeoutHandler(timeout.getSeconds()));
     // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
     // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
     // If your business logic is fully asynchronous or finished very quickly, you don't need to
@@ -111,29 +110,17 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     return sslCtx != null;
   }
 
-  private static final class Timeout {
-    private final long amount;
-    private final TimeUnit unit;
-
-    Timeout() {
-      this(30, TimeUnit.SECONDS);
-    }
-
-    Timeout(long amount, TimeUnit unit) {
-      this.amount = amount;
-      this.unit = unit;
-    }
-  }
-
   public static final class Builder {
 
     public static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
         new ServerSelfSignedCertificate();
 
     private SslContext sslContext;
-    private Timeout timeout = new Timeout();
-    private int maxContentLength = 64 * 1024;
     private EventExecutorGroup eventExecutorGroup;
+
+    // default
+    private int maxContentLength = 64 * 1024;
+    private Duration timeout = Duration.ofSeconds(30);
     private InetSocketAddress bindAddress = new InetSocketAddress(8080);
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
@@ -141,8 +128,16 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       return this;
     }
 
-    public Builder timeout(int timeout, TimeUnit unit) {
-      this.timeout = new Timeout(timeout, unit);
+    /**
+     * Timeout duration, default duration is used {@code Duration.ofSeconds(30)}.
+     *
+     * @param timeout duration timeout
+     * @return server initializer builder
+     */
+    public Builder timeout(Duration timeout) {
+      if (timeout != null) {
+        this.timeout = timeout;
+      }
       return this;
     }
 

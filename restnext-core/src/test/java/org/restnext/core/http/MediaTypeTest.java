@@ -20,6 +20,7 @@ package org.restnext.core.http;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -203,6 +204,7 @@ public class MediaTypeTest {
     assertTrue(MediaType.parse("image/jpeg").isCompatible(imageWildCard));
     assertTrue(MediaType.parse("image/png").isCompatible(imageWildCard));
     assertTrue(MediaType.parse("image/png").isCompatible(MediaType.WILDCARD));
+    assertFalse(MediaType.parse("text/plain").isCompatible(MediaType.parse("*/html")));
   }
 
   private void assertMediaType(String string) {

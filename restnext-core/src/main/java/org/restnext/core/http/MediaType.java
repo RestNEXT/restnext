@@ -162,12 +162,13 @@ public final class MediaType {
   public boolean isCompatible(MediaType other) {
     return other != null
         && // return false if other is null, else
-        (type.equals(TYPE_WILDCARD) || other.type.equals(TYPE_WILDCARD)
-            || // both are wildcard types, or
+        ((type.equals(TYPE_WILDCARD) || other.type.equals(TYPE_WILDCARD))
+            && (subtype.equals(TYPE_WILDCARD) || other.subtype.equals(TYPE_WILDCARD))
+            || // both are wildcard types and wildcard subtypes, or
             (type.equalsIgnoreCase(other.type) && (subtype.equals(TYPE_WILDCARD)
                 || other.subtype.equals(TYPE_WILDCARD)))
             || // same types, wildcard sub-types, or
-            (type.equalsIgnoreCase(other.type) && this.subtype.equalsIgnoreCase(other.subtype)));
+            (type.equalsIgnoreCase(other.type) && subtype.equalsIgnoreCase(other.subtype)));
     // same types & sub-types
   }
 
