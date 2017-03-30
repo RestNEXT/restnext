@@ -25,6 +25,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
 
@@ -74,7 +76,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     pipeline.addLast("http", new HttpServerCodec());
     pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
     pipeline.addLast("streamer", new ChunkedWriteHandler());
-    pipeline.addLast("timeout", new CustomReadTimeoutHandler(timeout.getSeconds()));
+    pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.getSeconds(), TimeUnit.SECONDS));
     // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
     // thread than an I/O thread so that the I/O thread is not blocked by a time-consuming task.
     // If your business logic is fully asynchronous or finished very quickly, you don't need to
@@ -120,7 +122,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     // default
     private int maxContentLength = 64 * 1024;
-    private Duration timeout = Duration.ofSeconds(30);
+    private Duration timeout = Duration.ofHours(1);
     private InetSocketAddress bindAddress = new InetSocketAddress(8080);
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
