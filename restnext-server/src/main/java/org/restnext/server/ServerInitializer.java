@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.SSLException;
 
+import org.restnext.core.http.MediaType;
 import org.restnext.core.http.Request;
 import org.restnext.core.http.Response;
 import org.restnext.route.Route;
@@ -56,6 +57,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
   private final Duration timeout;
   private final SslContext sslCtx;
   private final int maxContentLength;
+  private final Compressor compressor;
   private final InetSocketAddress bindAddress;
   private final EventExecutorGroup group;
 
@@ -65,6 +67,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     this.bindAddress = builder.bindAddress;
     this.timeout = builder.timeout;
     this.group = builder.eventExecutorGroup;
+    this.compressor = builder.compressor;
   }
 
   @Override
@@ -75,6 +78,13 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     }
     pipeline.addLast("http", new HttpServerCodec());
     pipeline.addLast("aggregator", new HttpObjectAggregator(maxContentLength));
+    if (compressor != null) {
+      pipeline.addLast("compressor", new CustomHttpContentCompressor(
+          compressor.level,
+          compressor.contentLength,
+          compressor.types
+      ));
+    }
     pipeline.addLast("streamer", new ChunkedWriteHandler());
     pipeline.addLast("timeout", new ReadTimeoutHandler(timeout.getSeconds(), TimeUnit.SECONDS));
     // Tell the pipeline to run MyBusinessLogicHandler's event handler methods in a different
@@ -112,13 +122,47 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     return sslCtx != null;
   }
 
+  private static final class Compressor {
+
+    static final int DEFAULT_COMPRESSION_LEVEL = 6;
+    static final int DEFAULT_MINIMUM_CONTENT_LENGTH = 10 * 1024; // 10kb
+    static final MediaType[] DEFAULT_COMPRESSIBLE_TYPES = new MediaType[] {
+        MediaType.parse("text/css"),
+        MediaType.parse("text/javascript"),
+        MediaType.parse("*/html"),
+        MediaType.parse("text/comma-separated-values"),
+        MediaType.parse("*/xml")
+    };
+
+    private final int level;
+    private final int contentLength;
+    private final MediaType[] types;
+
+    /**
+     * Creates a new instance with provided parameters.
+     *
+     * @param level
+     *        {@code 1} yields the fastest compression and {@code 9} yields the
+     *        best compression.  {@code 0} means no compression.  The default
+     *        compression level is {@code 6}.
+     * @param contentLength minimum content length for compression
+     * @param types compressible media types
+     */
+    public Compressor(int level, int contentLength, MediaType... types) {
+      this.level = level;
+      this.contentLength = contentLength;
+      this.types = types != null && types.length > 0 ? types : DEFAULT_COMPRESSIBLE_TYPES;
+    }
+  }
+
   public static final class Builder {
 
-    public static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
+    static final ServerCertificate DEFAULT_SERVER_CERTIFICATE =
         new ServerSelfSignedCertificate();
 
     private SslContext sslContext;
     private EventExecutorGroup eventExecutorGroup;
+    private Compressor compressor;
 
     // default
     private int maxContentLength = 64 * 1024;
@@ -127,6 +171,39 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
       this.bindAddress = bindAddress;
+      return this;
+    }
+
+    /**
+     * Enable compression with default compression level, default compression content length and
+     * default compressible media types.
+     */
+    public Builder enableCompression() {
+      return enableCompression(
+          Compressor.DEFAULT_COMPRESSION_LEVEL,
+          Compressor.DEFAULT_MINIMUM_CONTENT_LENGTH,
+          Compressor.DEFAULT_COMPRESSIBLE_TYPES
+      );
+    }
+
+    /**
+     * Enable compression.
+     *
+     * @param compressionLevel
+     *        {@code 1} yields the fastest compression and {@code 9} yields the
+     *        best compression.  {@code 0} means no compression.  The default
+     *        compression level is {@code 6}.
+     * @param compressionContentLength minimum content length for compression
+     * @param compressibleTypes compressible media types
+     * @return server initializer builder
+     */
+    public Builder enableCompression(int compressionLevel,
+                                     int compressionContentLength,
+                                     MediaType... compressibleTypes) {
+      this.compressor = new Compressor(
+          compressionLevel,
+          compressionContentLength,
+          compressibleTypes);
       return this;
     }
 
