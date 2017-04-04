@@ -60,7 +60,7 @@ After several searches on the WWW, I have not found a framework easy to use, hig
                     .enableRoutesScan()
                     .enableSecurityRoutesScan()
                     // automatic registration approach with custom path.
-                    .enableRoutesScan(SysPropertyUtils.getPath("user.home"))
+                    .enableRoutesScan(SystemPropertyUtils.getPath("user.home"))
                     .enableSecurityRoutesScan(Paths.get(System.getProperty("user.home"), "secure"))
                     // manual registration approach.
                     .route(uri, etagProvider)

@@ -29,10 +29,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertificateException;
 import java.time.Duration;
@@ -245,8 +242,10 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private SslContext createSslContext(ServerCertificate serverCertificate) {
       try {
-        return SslContextBuilder.forServer(serverCertificate.getCertificate(),
-            serverCertificate.getPrivateKey()).build();
+        return SslContextBuilder.forServer(
+            serverCertificate.getCertificate().toFile(),
+            serverCertificate.getPrivateKey().toFile()
+        ).build();
       } catch (SSLException ignore) {
         return null;
       }
@@ -352,21 +351,13 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       }
 
       @Override
-      public InputStream getCertificate() {
-        try {
-          return Files.newInputStream(certificate.certificate().toPath());
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+      public Path getCertificate() {
+        return certificate.certificate().toPath();
       }
 
       @Override
-      public InputStream getPrivateKey() {
-        try {
-          return Files.newInputStream(certificate.privateKey().toPath());
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+      public Path getPrivateKey() {
+        return certificate.privateKey().toPath();
       }
     }
 

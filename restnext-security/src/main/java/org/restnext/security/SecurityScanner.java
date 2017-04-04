@@ -39,7 +39,7 @@ import org.restnext.core.classpath.ClasspathRegister;
 import org.restnext.core.http.Request;
 import org.restnext.core.jaxb.Jaxb;
 import org.restnext.security.jaxb.Securities;
-import org.restnext.util.SysPropertyUtils;
+import org.restnext.util.SystemPropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaCreationException;
@@ -54,7 +54,8 @@ public final class SecurityScanner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SecurityScanner.class);
 
-  public static final Path DEFAULT_SECURITY_DIR = SysPropertyUtils.getPath("user.dir", "security");
+  public static final Path DEFAULT_SECURITY_DIR = SystemPropertyUtils.getPath(
+      "user.dir", "security");
 
   private final Security security;
   private final Jaxb securityJaxb;
@@ -86,7 +87,7 @@ public final class SecurityScanner {
   // methods
 
   private void createLambda(final Set<Path> jars) {
-    final String classpath = SysPropertyUtils.get("java.class.path");
+    final String classpath = SystemPropertyUtils.get("java.class.path");
     final StringJoiner compilationClassPathJoiner = new StringJoiner(":")
         .add(classpath);
 

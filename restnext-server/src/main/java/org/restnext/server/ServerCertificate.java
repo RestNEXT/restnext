@@ -16,15 +16,15 @@
 
 package org.restnext.server;
 
-import java.io.InputStream;
+import java.nio.file.Path;
 
 /**
  * Created by thiago on 10/03/17.
  */
 interface ServerCertificate {
 
-  InputStream getCertificate();
+  Path getCertificate();
 
-  InputStream getPrivateKey();
+  Path getPrivateKey();
 
 }

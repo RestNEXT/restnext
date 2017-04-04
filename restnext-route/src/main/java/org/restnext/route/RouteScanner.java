@@ -41,7 +41,7 @@ import org.restnext.core.http.Request;
 import org.restnext.core.http.Response;
 import org.restnext.core.jaxb.Jaxb;
 import org.restnext.route.jaxb.Routes;
-import org.restnext.util.SysPropertyUtils;
+import org.restnext.util.SystemPropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.joegreen.lambdaFromString.LambdaCreationException;
@@ -56,7 +56,8 @@ public final class RouteScanner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(RouteScanner.class);
 
-  public static final Path DEFAULT_ROUTE_DIR = SysPropertyUtils.getPath("user.dir", "route");
+  public static final Path DEFAULT_ROUTE_DIR = SystemPropertyUtils.getPath(
+      "user.dir", "route");
 
   private final Route route;
   private final Jaxb routesJaxb;
@@ -88,7 +89,7 @@ public final class RouteScanner {
   // methods
 
   private void createLambda(final Set<Path> jars) {
-    String classpath = SysPropertyUtils.get("java.class.path");
+    String classpath = SystemPropertyUtils.get("java.class.path");
     StringJoiner compilationClassPathJoiner = new StringJoiner(":")
         .add(classpath);
 
