@@ -22,7 +22,7 @@ After several searches on the WWW, I have not found a framework easy to use, hig
         public static void main(String[] args) {
             ServerInitializer
                 .route("/", req -> Response.ok("it works").build())
-                .route("/ping", req -> Response.ok("pong").build())
+                .route("/stream", req -> Response.ok("large content").chunked().build())
                 .start();
         }
     }
@@ -35,8 +35,8 @@ After several searches on the WWW, I have not found a framework easy to use, hig
         public static void main(String[] args) {
     
             Function<Request, Response> provider = request -> Response.ok("ok").build();
-    
-            Function<Request, Response> etagProvider = request -> {
+            Function<Request, Response> provider2 = r -> Response.ok(r.getParams().getFirst("name")).build();
+            Function<Request, Response> eTagProvider = request -> {
                 EntityTag entityTag = new EntityTag("contentCalculatedEtagValue");
                 return Optional.ofNullable(request.evaluatePreconditions(entityTag))
                         .orElse(Response.ok().tag(entityTag))
@@ -44,15 +44,18 @@ After several searches on the WWW, I have not found a framework easy to use, hig
             };
     
             Function<Request, Boolean> secureProvider = request -> true;
+            Function<Request, Boolean> hmacSecureProvider = request -> true;
     
             Route.Mapping[] routes = {
-                    Route.Mapping.uri("/1", provider).build(),
-                    Route.Mapping.uri("/2", etagProvider).build()
+                    Route.Mapping.uri("/", provider).build(),
+                    Route.Mapping.uri("/regex/\\d+", eTagProvider).build(),
+                    Route.Mapping.uri("/param/{name}", provider2).build()
             };
     
             Security.Mapping[] secures = {
-                    Security.Mapping.uri("/1", secureProvider).build(),
-                    Security.Mapping.uri("/2", secureProvider).build()
+                    Security.Mapping.uri("/", secureProvider).build(),
+                    Security.Mapping.uri("/regex/\\d+", r -> false).build(),
+                    Security.Mapping.uri("/param/{name}", hmacSecureProvider).build()
             };
     
             ServerInitializer.builder()
@@ -63,11 +66,20 @@ After several searches on the WWW, I have not found a framework easy to use, hig
                     .enableRoutesScan(SystemPropertyUtils.getPath("user.home"))
                     .enableSecurityRoutesScan(Paths.get(System.getProperty("user.home"), "secure"))
                     // manual registration approach.
+                    .route("ping", req -> Response.ok("pong").build())
                     .route(uri, etagProvider)
+                    .secure(uri, req -> true)
                     .secure(uri, secureProvider)
                     // multiple manual registration approach.
                     .routes(routes)
                     .secures(secures)
+                    // start as https
+                    .ssl()
+                    // read timeout
+                    .timeout(Duration.ofSeconds(30))
+                    // enable compression
+                    .enableCompression()
+                    //... and other options
                     // build and start the server.
                     .start();
         }
@@ -168,7 +180,7 @@ Maven Artifact:
 <dependency>
     <groupId>org.restnext</groupId>
     <artifactId>restnext-server</artifactId>
-    <version>0.3.4</version>
+    <version>0.3.5</version>
 </dependency>
 ```
 
