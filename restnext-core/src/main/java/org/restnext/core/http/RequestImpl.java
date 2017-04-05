@@ -111,7 +111,7 @@ public final class RequestImpl implements Request {
       if (isFormData) {
         // decode the inbound netty request body multipart/form-data parameters.
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(
-            new DefaultHttpDataFactory(), request);
+            new DefaultHttpDataFactory(), request, charset);
         try {
           for (InterfaceHttpData data : decoder.getBodyHttpDatas()) {
             InterfaceHttpData.HttpDataType type = data.getHttpDataType();
