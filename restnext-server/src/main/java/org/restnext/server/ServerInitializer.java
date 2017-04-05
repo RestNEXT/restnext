@@ -158,13 +158,13 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         new ServerSelfSignedCertificate();
 
     private SslContext sslContext;
-    private EventExecutorGroup eventExecutorGroup;
     private Compressor compressor;
+    private InetSocketAddress bindAddress;
+    private EventExecutorGroup eventExecutorGroup;
 
     // default
     private int maxContentLength = 64 * 1024;
     private Duration timeout = Duration.ofHours(1);
-    private InetSocketAddress bindAddress = new InetSocketAddress(8080);
 
     public Builder bindAddress(InetSocketAddress bindAddress) {
       this.bindAddress = bindAddress;
@@ -309,8 +309,20 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
      * @return the server initializer
      */
     public ServerInitializer build() {
+
+      // before build the server initializer...
+
       // register default health check route.
       route("/ping", request -> Response.ok("pong").build());
+
+      // register default port.
+      if (this.bindAddress == null) {
+        if (this.sslContext == null) {
+          this.bindAddress = new InetSocketAddress(8080);
+        } else {
+          this.bindAddress = new InetSocketAddress(8443);
+        }
+      }
       return new ServerInitializer(this);
     }
 
