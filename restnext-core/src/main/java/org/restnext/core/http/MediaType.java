@@ -142,6 +142,9 @@ public final class MediaType {
   /**
    * Returns the charset of this media type, or {@code defaultValue} if either this media type
    * doesn't specify a charset, of it its charset is unsupported by the current runtime.
+   *
+   * @param defaultValue the default charset
+   * @return charset
    */
   public Charset charset(Charset defaultValue) {
     try {

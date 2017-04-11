@@ -33,8 +33,10 @@ public final class SystemPropertyUtils {
   private static final Logger logger = LoggerFactory.getLogger(SystemPropertyUtils.class);
 
   /**
-   * Returns {@code true} if and only if the system property with the specified {@code key}
-   * exists.
+   * Check if contains this key.
+   *
+   * @param key the key
+   * @return {@code true} if and only if the system property with the specified {@code key} exists
    */
   public static boolean contains(String key) {
     return get(key) != null;
@@ -44,6 +46,7 @@ public final class SystemPropertyUtils {
    * Returns the value of the Java system property with the specified
    * {@code key}, while falling back to {@code null} if the property access fails.
    *
+   * @param key the key
    * @return the property value or {@code null}
    */
   public static String get(String key) {
@@ -55,6 +58,8 @@ public final class SystemPropertyUtils {
    * {@code key}, while falling back to the specified default value if
    * the property access fails.
    *
+   * @param key the key
+   * @param def the default value
    * @return the property value.
    *         {@code def} if there's no such property or if an access to the
    *         specified property is not allowed.
@@ -96,6 +101,8 @@ public final class SystemPropertyUtils {
    * {@code key}, while falling back to the specified default value if
    * the property access fails.
    *
+   * @param key the key
+   * @param def the default value
    * @return the property value.
    *         {@code def} if there's no such property or if an access to the
    *         specified property is not allowed.
@@ -133,6 +140,8 @@ public final class SystemPropertyUtils {
    * {@code key}, while falling back to the specified default value if
    * the property access fails.
    *
+   * @param key the key
+   * @param def the default value
    * @return the property value.
    *         {@code def} if there's no such property or if an access to the
    *         specified property is not allowed.
@@ -164,6 +173,8 @@ public final class SystemPropertyUtils {
    * {@code key}, while falling back to the specified default value if
    * the property access fails.
    *
+   * @param key the key
+   * @param def the default value
    * @return the property value.
    *         {@code def} if there's no such property or if an access to the
    *         specified property is not allowed.

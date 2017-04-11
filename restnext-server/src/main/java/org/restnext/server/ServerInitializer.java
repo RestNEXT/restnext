@@ -174,6 +174,8 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
     /**
      * Enable compression with default compression level, default compression content length and
      * default compressible media types.
+     *
+     * @return server initializer builder
      */
     public Builder enableCompression() {
       return enableCompression(
