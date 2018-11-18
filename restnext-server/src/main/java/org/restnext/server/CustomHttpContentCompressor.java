@@ -38,7 +38,7 @@ public class CustomHttpContentCompressor extends HttpContentCompressor {
 
   /**
    * Creates a new handler with the specified compression level, default
-   * window size (<tt>15</tt>) and default memory level (<tt>8</tt>).
+   * window size (<code>15</code>) and default memory level (<code>8</code>).
    *
    * @param compressionLevel
    *        {@code 1} yields the fastest compression and {@code 9} yields the
@@ -96,12 +96,6 @@ public class CustomHttpContentCompressor extends HttpContentCompressor {
 
   private boolean isCompressable(MediaType type) {
     return Arrays.stream(compressibleTypes)
-        .anyMatch(m -> {
-          boolean match = m.isSimilar(type) || m.isCompatible(type);
-          if (match) {
-            System.out.println(m);
-          }
-          return match;
-        });
+        .anyMatch(m -> m.isSimilar(type) || m.isCompatible(type));
   }
 }

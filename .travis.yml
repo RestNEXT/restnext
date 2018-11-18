@@ -8,7 +8,8 @@ branches:
         - gh-pages
 jdk:
   - oraclejdk8
-install: /bin/true
+  - oraclejdk11
+install: true
 script:
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - mvn test -B

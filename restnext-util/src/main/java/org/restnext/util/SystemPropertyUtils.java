@@ -20,8 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.regex.Pattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class SystemPropertyUtils {
 
-  private static final Logger logger = LoggerFactory.getLogger(SystemPropertyUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SystemPropertyUtils.class);
 
   /**
    * Check if contains this key.
@@ -55,8 +53,7 @@ public final class SystemPropertyUtils {
 
   /**
    * Returns the value of the Java system property with the specified
-   * {@code key}, while falling back to the specified default value if
-   * the property access fails.
+   * {@code key}, while falling back to the specified default value if the property access fails.
    *
    * @param key the key
    * @param def the default value
@@ -84,9 +81,9 @@ public final class SystemPropertyUtils {
           }
         });
       }
-    } catch (Exception e) {
-      log("Unable to retrieve a system property '" + key
-          + "'; default values will be used.", e);
+    } catch (SecurityException e) {
+      LOGGER.warn(
+          "Unable to retrieve a system property '{}'; default values will be used.", key, e);
     }
 
     if (value == null) {
@@ -115,7 +112,7 @@ public final class SystemPropertyUtils {
 
     value = value.trim().toLowerCase();
     if (value.isEmpty()) {
-      return true;
+      return def;
     }
 
     if ("true".equals(value) || "yes".equals(value) || "1".equals(value)) {
@@ -126,14 +123,12 @@ public final class SystemPropertyUtils {
       return false;
     }
 
-    log(
-        "Unable to parse the boolean system property '" + key + "':" + value + " - "
-            + "using the default value: " + def);
+    LOGGER.warn(
+        "Unable to parse the boolean system property '{}':{} - using the default value: {}",
+        key, value, def);
 
     return def;
   }
-
-  private static final Pattern INTEGER_PATTERN = Pattern.compile("-?[0-9]+");
 
   /**
    * Returns the value of the Java system property with the specified
@@ -152,18 +147,16 @@ public final class SystemPropertyUtils {
       return def;
     }
 
-    value = value.trim().toLowerCase();
-    if (INTEGER_PATTERN.matcher(value).matches()) {
-      try {
-        return Integer.parseInt(value);
-      } catch (Exception e) {
-        // Ignore
-      }
+    value = value.trim();
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException ignore) {
+      LOGGER.warn("Invalid long value");
     }
 
-    log(
-        "Unable to parse the integer system property '" + key + "':" + value + " - "
-            + "using the default value: " + def);
+    LOGGER.warn(
+        "Unable to parse the integer system property '{}':{} - using the default value: {}",
+        key, value, def);
 
     return def;
   }
@@ -185,28 +178,18 @@ public final class SystemPropertyUtils {
       return def;
     }
 
-    value = value.trim().toLowerCase();
-    if (INTEGER_PATTERN.matcher(value).matches()) {
-      try {
-        return Long.parseLong(value);
-      } catch (Exception e) {
-        // Ignore
-      }
+    value = value.trim();
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException ignore) {
+      LOGGER.warn("Invalid long value");
     }
 
-    log(
-        "Unable to parse the long integer system property '" + key + "':" + value + " - "
-            + "using the default value: " + def);
+    LOGGER.warn(
+        "Unable to parse the long integer system property '{}':{} - using the default value: {}",
+        key, value, def);
 
     return def;
-  }
-
-  private static void log(String msg) {
-    logger.warn(msg);
-  }
-
-  private static void log(String msg, Exception e) {
-    logger.warn(msg, e);
   }
 
   /**

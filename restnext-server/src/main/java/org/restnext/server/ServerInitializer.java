@@ -45,11 +45,15 @@ import org.restnext.route.Route;
 import org.restnext.route.RouteScanner;
 import org.restnext.security.Security;
 import org.restnext.security.SecurityScanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by thiago on 04/08/16.
  */
 public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ServerInitializer.class);
 
   private final Duration timeout;
   private final SslContext sslCtx;
@@ -257,7 +261,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       return secures(Security.Mapping.uri(uri, provider).build());
     }
 
-    public final Builder secures(Security.Mapping... securityMapping) {
+    public Builder secures(Security.Mapping... securityMapping) {
       Arrays.asList(securityMapping).forEach(Security.INSTANCE::register);
       return this;
     }
@@ -336,7 +340,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
       return routes(routeMapping);
     }
 
-    public final Builder routes(Route.Mapping... routeMapping) {
+    public Builder routes(Route.Mapping... routeMapping) {
       Arrays.asList(routeMapping).forEach(Route.INSTANCE::register);
       return this;
     }
@@ -360,7 +364,7 @@ public final class ServerInitializer extends ChannelInitializer<SocketChannel> {
         try {
           certificate = new SelfSignedCertificate(fqdn);
         } catch (CertificateException ignore) {
-          // nop
+          LOGGER.warn("Could not create self signed certificate");
         }
       }
 

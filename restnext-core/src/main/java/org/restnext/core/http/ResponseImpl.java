@@ -31,7 +31,6 @@ import static io.netty.handler.codec.http.HttpHeaderNames.LOCATION;
 import static io.netty.handler.codec.http.HttpHeaderNames.SERVER;
 
 import io.netty.util.AsciiString;
-
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -153,7 +152,7 @@ public final class ResponseImpl implements Response {
     @Override
     public Response build() {
       // Set my mandatory Date header, if not exists.
-      if (headers.get(DATE) == null) {
+      if (headers.get(DATE.toString()) == null) {
         date(new Date());
       }
 

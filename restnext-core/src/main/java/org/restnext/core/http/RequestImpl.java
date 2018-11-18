@@ -19,6 +19,7 @@ package org.restnext.core.http;
 import static io.netty.handler.codec.DateFormatter.parseHttpDate;
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
 import static io.netty.handler.codec.http.HttpHeaderNames.DATE;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_MATCH;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_MODIFIED_SINCE;
 import static io.netty.handler.codec.http.HttpHeaderNames.IF_NONE_MATCH;
@@ -27,7 +28,6 @@ import static org.restnext.util.UriUtils.normalize;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpUtil;
@@ -38,7 +38,6 @@ import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.util.AsciiString;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -52,11 +51,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by thiago on 24/08/16.
  */
 public final class RequestImpl implements Request {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequestImpl.class);
 
   private final Version version;
   private final Method method;
@@ -121,7 +124,7 @@ public final class RequestImpl implements Request {
                   Attribute attribute = (Attribute) data;
                   this.parameters.add(attribute.getName(), attribute.getValue());
                 } catch (IOException ignore) {
-                  //nop
+                  LOGGER.warn("Could not get attribute value");
                 }
                 break;
               }
@@ -146,7 +149,7 @@ public final class RequestImpl implements Request {
 
   private URI createBaseUri(ChannelHandlerContext ctx, FullHttpRequest req) {
     final String protocol = req.protocolVersion().protocolName().toLowerCase();
-    String host = req.headers().get(HttpHeaderNames.HOST);
+    String host = req.headers().get(HOST);
     if (host == null) {
       InetSocketAddress address = (InetSocketAddress) ctx.channel().localAddress();
       host = address.getHostName() + ":" + address.getPort();
@@ -206,7 +209,7 @@ public final class RequestImpl implements Request {
     return header == null || header.trim().isEmpty()
         ? Collections.singletonList(MediaType.WILDCARD)
         : Collections.unmodifiableList(Arrays.stream(header.split(","))
-        .map(MediaType::valueOf).collect(Collectors.toList()));
+            .map(MediaType::valueOf).collect(Collectors.toList()));
   }
 
   @Override
@@ -322,10 +325,10 @@ public final class RequestImpl implements Request {
   private Response.Builder evaluateIfModifiedSince(long lastModifiedTime) {
     String ifModifiedSinceHeader = getHeader(IF_MODIFIED_SINCE);
 
-    if (ifModifiedSinceHeader != null && !ifModifiedSinceHeader.trim().isEmpty()) {
-      if (isGetOrHead()) {
-        return evaluateIfModifiedSince(lastModifiedTime, ifModifiedSinceHeader);
-      }
+    if (ifModifiedSinceHeader != null
+        && !ifModifiedSinceHeader.trim().isEmpty()
+        && isGetOrHead()) {
+      return evaluateIfModifiedSince(lastModifiedTime, ifModifiedSinceHeader);
     }
     return null;
   }
@@ -411,7 +414,7 @@ public final class RequestImpl implements Request {
   }
 
   private EntityTag readMatchingEntityTag(String header) {
-    return (header == null || header.isEmpty())
+    return header == null || header.isEmpty()
         ? null
         : EntityTag.valueOf(header);
   }

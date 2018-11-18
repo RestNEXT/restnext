@@ -41,13 +41,11 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.util.internal.ThrowableUtil;
-
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringJoiner;
-
 import org.restnext.core.http.MediaType;
 import org.restnext.core.http.Message;
 import org.restnext.core.http.Request;
@@ -63,14 +61,14 @@ import org.restnext.security.Security;
 @ChannelHandler.Sharable
 class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-  public static final ServerHandler INSTANCE = new ServerHandler();
+  static final ServerHandler INSTANCE = new ServerHandler();
 
   private ServerHandler() {
 
   }
 
   @Override
-  protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+  protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) {
     if (req.decoderResult().isFailure()) {
       throw new ServerException(req.decoderResult().cause(), BAD_REQUEST);
     }
@@ -148,7 +146,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     if (chunked) {
       resp = new DefaultHttpResponse(version, status);
-      HttpUtil.setTransferEncodingChunked(resp, chunked);
+      HttpUtil.setTransferEncodingChunked(resp, true);
       createOutboutHeaders(resp, response, keepAlive);
       // Write the initial line and the header.
       ctx.write(resp);
@@ -187,7 +185,7 @@ class ServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
   }
 
   @Override
-  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+  public void channelReadComplete(ChannelHandlerContext ctx) {
     ctx.flush();
   }
 

@@ -94,7 +94,7 @@ public final class Server {
           .sync();
 
       LOGGER.info("Application is running at - {}://{}",
-          (serverInitializer.isSslConfigured() ? "https" : "http"), bindAddress);
+          serverInitializer.isSslConfigured() ? "https" : "http", bindAddress);
 
       channelFuture.channel().closeFuture().sync();
 
@@ -134,7 +134,7 @@ public final class Server {
           try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
             printBanner(fs.getPath(target));
           } catch (IOException ignore) {
-            //nop
+            LOGGER.warn("An I/O error occurs creating the file system");
           }
           break;
         default: //nop
@@ -173,7 +173,7 @@ public final class Server {
             .map(s -> String.format(s, props.getProperty("version", "")))
             .forEach(LOGGER::info);
       } catch (IOException ignore) {
-        //nop
+        LOGGER.warn("An error occurred when reading from the input stream");
       }
     }
   }

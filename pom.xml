@@ -78,8 +78,12 @@
       <plugins>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.8.0</version>
           <configuration>
+            <fork>true</fork>
+            <compilerArgs>
+              <arg>-Xlint:all</arg>
+            </compilerArgs>
             <source>1.8</source>
             <target>1.8</target>
           </configuration>
@@ -99,10 +103,10 @@
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.10.4</version>
+          <version>3.0.1</version>
           <configuration>
-            <show>public</show>
-            <maxmemory>1024m</maxmemory>
+            <quiet>true</quiet>
+            <doclint>none</doclint>
           </configuration>
           <executions>
             <execution>
@@ -124,7 +128,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>1.4.1</version>
+          <version>3.0.0-M2</version>
           <executions>
             <execution>
               <id>enforce-versions</id>
@@ -135,6 +139,9 @@
           </executions>
           <configuration>
             <rules>
+              <requireMavenVersion>
+                <version>3.3.1</version>
+              </requireMavenVersion>
               <requireJavaVersion>
                 <version>[1.8,)</version>
               </requireJavaVersion>
@@ -143,12 +150,12 @@
         </plugin>
         <plugin>
           <groupId>org.jvnet.jaxb2.maven2</groupId>
-          <artifactId>maven-jaxb2-plugin</artifactId>
-          <version>0.13.2</version>
+          <artifactId>maven-jaxb22-plugin</artifactId>
+          <version>0.14.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>2.17</version>
+          <version>3.0.0</version>
           <configuration>
             <configLocation>etc/checkstyle/google_checks.xml</configLocation>
             <encoding>UTF-8</encoding>
@@ -162,13 +169,54 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>7.6.1</version>
+              <version>8.14</version>
             </dependency>
           </dependencies>
           <executions>
             <execution>
               <id>validate</id>
               <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <generateBackupPoms>false</generateBackupPoms>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>3.11.0</version>
+          <configuration>
+            <linkXRef>false</linkXRef>
+            <sourceEncoding>utf-8</sourceEncoding>
+            <targetJdk>1.8</targetJdk>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>pmd</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>3.0.5</version>
+          <configuration>
+            <effort>Max</effort>
+            <xmlOutput>false</xmlOutput>
+          </configuration>
+          <executions>
+            <execution>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -195,6 +243,9 @@
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

@@ -58,7 +58,7 @@ public final class FileUtils {
     if (directory == null || !Files.isDirectory(directory)) {
       return Collections.emptySet();
     }
-    glob = (glob == null || glob.trim().isEmpty()) ? DEFAULT_GLOB : glob;
+    glob = glob == null || glob.trim().isEmpty() ? DEFAULT_GLOB : glob;
     Set<Path> children = new HashSet<>();
     try (DirectoryStream<Path> childrenStream = Files.newDirectoryStream(directory, glob)) {
       childrenStream.forEach(children::add);
@@ -83,7 +83,7 @@ public final class FileUtils {
     if (directory == null || !Files.isDirectory(directory)) {
       return Collections.emptySet();
     }
-    glob = (glob == null || glob.trim().isEmpty()) ? DEFAULT_GLOB : glob;
+    glob = glob == null || glob.trim().isEmpty() ? DEFAULT_GLOB : glob;
     final PathMatcher pathMatcher = directory.getFileSystem()
         .getPathMatcher("glob:" + glob);
     BiPredicate<Path, BasicFileAttributes> filter = DEFAULT_GLOB.equals(glob.trim())
