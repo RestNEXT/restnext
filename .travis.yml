@@ -15,3 +15,4 @@ script:
   - mvn test -B
 notifications:
   email: false
+dist: trusty
