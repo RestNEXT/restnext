@@ -2,16 +2,17 @@ language: java
 sudo: false
 cache:
   directories:
-    - $HOME/.m2
+    - $HOME/.m2/repository
 branches:
     except:
         - gh-pages
 jdk:
   - oraclejdk8
-  - oraclejdk11
-install: true
+  - oraclejdk14
+install: /bin/true
 script:
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - jdk_switcher use oraclejdk14
   - mvn test -B
 notifications:
   email: false

@@ -136,7 +136,7 @@ public final class SecurityScanner {
   }
 
   private void lookupSecurityFiles(final Path jar) {
-    try (FileSystem fs = FileSystems.newFileSystem(jar, null)) {
+    try (FileSystem fs = FileSystems.newFileSystem(jar, (ClassLoader) null)) {
       final Path securityDirectory = fs.getPath("/META-INF/security/");
       if (Files.exists(securityDirectory)) {
         Set<Path> securityFiles = deepListChildren(securityDirectory, "*.xml");

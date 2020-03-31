@@ -138,7 +138,7 @@ public final class RouteScanner {
   }
 
   private void lookupRouteFiles(final Path jar) {
-    try (FileSystem fs = FileSystems.newFileSystem(jar, null)) {
+    try (FileSystem fs = FileSystems.newFileSystem(jar, (ClassLoader) null)) {
       final Path routeDirectory = fs.getPath("/META-INF/route/");
       if (Files.exists(routeDirectory)) {
         Set<Path> routeFiles = deepListChildren(routeDirectory, "*.xml");

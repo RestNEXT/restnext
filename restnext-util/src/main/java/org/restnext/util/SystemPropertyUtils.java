@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Locale;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +64,7 @@ public final class SystemPropertyUtils {
    *         specified property is not allowed.
    */
   public static String get(final String key, String def) {
-    if (key == null) {
-      throw new NullPointerException("key");
-    }
+    Objects.requireNonNull(key, "key");
     if (key.isEmpty()) {
       throw new IllegalArgumentException("key must not be empty.");
     }
@@ -110,7 +110,7 @@ public final class SystemPropertyUtils {
       return def;
     }
 
-    value = value.trim().toLowerCase();
+    value = value.trim().toLowerCase(Locale.getDefault());
     if (value.isEmpty()) {
       return def;
     }
