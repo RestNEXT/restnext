@@ -9,22 +9,21 @@ branches:
 jdk:
   - oraclejdk8
   - openjdk8
-  - oraclejdk11
-  - openjdk11
+#  - oraclejdk11
+#  - openjdk11
 install: /bin/true
 script:
-  - jdk_switcher use oraclejdk8
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - jdk_switcher use openjdk8
   - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-  - jdk_switcher use oraclejdk11
-  - export JAVA_HOME=$HOME/oraclejdk11
-  - $TRAVIS_BUILD_DIR/install-jdk.sh --install oraclejdk11 --target $JAVA_HOME
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-  - jdk_switcher use openjdk11
-  - export JAVA_HOME=$HOME/openjdk11
-  - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk11 --target $JAVA_HOME
-  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+#  - jdk_switcher use oraclejdk11
+#  - export JAVA_HOME=$HOME/oraclejdk11
+#  - $TRAVIS_BUILD_DIR/install-jdk.sh --install oraclejdk11 --target $JAVA_HOME
+#  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+#  - jdk_switcher use openjdk11
+#  - export JAVA_HOME=$HOME/openjdk11
+#  - $TRAVIS_BUILD_DIR/install-jdk.sh --install openjdk11 --target $JAVA_HOME
+#  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - mvn test -B
 notifications:
   email: false
